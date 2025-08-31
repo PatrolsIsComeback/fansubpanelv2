@@ -36,6 +36,7 @@ body {
     position: fixed;
     height: 100%;
     box-sizing: border-box;
+    z-index: 1000; /* Sidebar'ın diğer içeriklerin üzerinde kalmasını sağlar */
 }
 
 .logo {
@@ -87,11 +88,11 @@ body {
 }
 
 .view {
-    display: none; /* Varsayılan olarak tüm paneller gizli */
+    display: none;
 }
 
 .view.active {
-    display: block; /* Sadece aktif olan panel görünür */
+    display: block;
 }
 
 h2 {
@@ -99,6 +100,12 @@ h2 {
     border-bottom: 2px solid var(--primary-color);
     padding-bottom: 10px;
     margin-bottom: 20px;
+}
+
+h3 {
+    color: var(--text-color);
+    margin-top: 30px;
+    margin-bottom: 15px;
 }
 
 .grid-container {
@@ -155,13 +162,15 @@ h2 {
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     display: flex;
+    flex-wrap: wrap; /* Küçük ekranlar için sarmalamayı sağlar */
     gap: 20px;
     padding: 20px;
     margin-bottom: 30px;
 }
 
 .detail-image {
-    width: 300px;
+    width: 100%;
+    max-width: 300px; /* Sabit genişlik yerine max-width kullanılır */
     height: 400px;
     object-fit: cover;
     border-radius: 8px;
@@ -226,9 +235,8 @@ button[type="submit"]:hover {
 }
 
 .episode-card {
-    background-color: var(--card-background);
-    padding: 15px;
-    border-radius: 8px;
+    position: relative;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -240,10 +248,12 @@ button[type="submit"]:hover {
     color: var(--text-color);
 }
 
-.episode-meta span {
+.episode-meta {
     font-size: 0.85rem;
     color: var(--light-text-color);
-    margin-right: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .links-list {
@@ -264,7 +274,6 @@ button[type="submit"]:hover {
 .edit-button, .delete-button {
     position: absolute;
     top: 10px;
-    right: 10px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -272,12 +281,17 @@ button[type="submit"]:hover {
     z-index: 10;
 }
 
-.delete-button {
+.edit-button {
     right: 45px;
+}
+
+.delete-button {
+    right: 10px;
 }
 
 .edit-button img, .delete-button img {
     width: 20px;
+    height: 20px;
     filter: invert(0.8);
     transition: filter 0.2s;
 }
@@ -313,7 +327,7 @@ button[type="submit"]:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 999;
+    z-index: 9999; /* En üstte kalması için z-index değeri artırıldı */
 }
 
 .spinner {
@@ -331,29 +345,7 @@ button[type="submit"]:hover {
 }
 
 .hidden {
-    display: none;
-}
-
-/* ... Diğer CSS kodları ... */
-
-.episode-card .edit-button,
-.episode-card .delete-button {
-    position: static; /* Kartın içinde normal akışa dönmesini sağlar */
-    margin-left: 10px;
-    vertical-align: middle;
-}
-
-.episode-card .edit-button img,
-.episode-card .delete-button img {
-    width: 20px;
-    height: 20px;
-    filter: invert(0.8);
-    transition: filter 0.2s;
-}
-
-.episode-card .edit-button:hover img,
-.episode-card .delete-button:hover img {
-    filter: invert(1);
+    display: none !important; /* !important eklenerek görünürlüğü kesin olarak kontrol edilir */
 }
 
 .load-more-container {
@@ -377,68 +369,57 @@ button[type="submit"]:hover {
     background-color: var(--button-hover);
 }
 
-.hidden {
-    display: none;
-}
+/* Responsive Tasarım */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
 
-.episode-card {
-    /* Mevcut stil kodlarınız */
-    position: relative;
-    padding: 20px;
-}
+    .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 10px 20px;
+    }
+    
+    .sidebar .logo {
+        display: none; /* Mobil ekranda logoyu gizler */
+    }
 
-.episode-card .edit-button,
-.episode-card .delete-button {
-    position: absolute;
-    top: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-}
+    .sidebar .nav {
+        flex-direction: row;
+        gap: 5px;
+    }
+    
+    .sidebar .nav-item {
+        padding: 8px;
+        flex-grow: 1;
+        justify-content: center;
+    }
 
-.episode-card .edit-button {
-    right: 45px; /* Sağ taraftan 45px boşluk */
-}
+    .sidebar .nav-item span {
+        display: none; /* Mobil ekranda menü metinlerini gizler */
+    }
 
-.episode-card .delete-button {
-    right: 10px; /* Sağ taraftan 10px boşluk */
-}
+    .sidebar .nav-icon {
+        margin-right: 0;
+    }
 
-.episode-card .edit-button img,
-.episode-card .delete-button img {
-    width: 20px;
-    height: 20px;
-    filter: invert(0.8);
-    transition: filter 0.2s;
-}
-
-.episode-card .edit-button:hover img,
-.episode-card .delete-button:hover img {
-    filter: invert(1);
-}
-
-.load-more-container {
-    text-align: center;
-    margin-top: 20px;
-}
-
-.load-more-button {
-    padding: 12px 25px;
-    background-color: var(--primary-color);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.load-more-button:hover {
-    background-color: var(--button-hover);
-}
-
-.hidden {
-    display: none;
+    .content {
+        margin-left: 0;
+        padding-top: 20px;
+    }
+    
+    .detail-card {
+        flex-direction: column;
+    }
+    
+    .detail-image {
+        max-width: 100%;
+        height: auto;
+    }
 }
