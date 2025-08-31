@@ -55,7 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showView = (id) => {
         elements.views.forEach(view => view.style.display = 'none');
-        document.getElementById(id).style.display = 'block';
+        const targetView = document.getElementById(id);
+        if (targetView) {
+            targetView.style.display = 'block';
+        }
         elements.navItems.forEach(item => item.classList.remove('active'));
         const navItem = document.querySelector(`[data-view="${id}"]`);
         if (navItem) navItem.classList.add('active');
@@ -455,3 +458,4 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAnimes();
     showView('animes-view');
 });
+```"
