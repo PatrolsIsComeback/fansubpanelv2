@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SomeSubs Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                <span>SomeSubs Panel</span>
+            </div>
+            <nav class="nav-links">
+                <a href="#animes" class="active" data-page="animes"><i class="fas fa-list"></i> Animeler</a>
+                <a href="#create-anime" data-page="create-anime"><i class="fas fa-plus-circle"></i> Anime Oluştur</a>
+                <a href="#episodes" data-page="episodes"><i class="fas fa-list-alt"></i> Bölümler</a>
+                <a href="#create-episode" data-page="create-episode"><i class="fas fa-plus-square"></i> Bölüm Oluştur</a>
+            </nav>
+            <div class="sidebar-footer">
+                <i class="fas fa-info-circle"></i> V1.0.0
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="page-content"></div>
+        </main>
+    </div>
+
+    <div class="loading-spinner" id="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
