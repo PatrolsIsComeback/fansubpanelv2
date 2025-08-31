@@ -41,7 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const episodeForm = {
         animeId: document.getElementById('episode-anime-select'),
+        season: document.getElementById('episode-season'), // Yeni eklendi
         number: document.getElementById('episode-number'),
+        duration: document.getElementById('episode-duration'), // Yeni eklendi
         rating: document.getElementById('episode-rating'),
         translator: document.getElementById('episode-translator'),
         encoder: document.getElementById('episode-encoder'),
@@ -73,6 +75,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const hideSpinner = () => {
         elements.loadingSpinner.style.display = 'none';
+    };
+    
+    // URL'den hostname alıp baş harfini büyüten yardımcı fonksiyon
+    const getLinkHost = (url) => {
+        try {
+            const hostname = new URL(url).hostname;
+            const parts = hostname.split('.');
+            if (parts.length > 1) {
+                // Örneğin "www.animecix.net" -> "Animecix"
+                return parts[parts.length - 2].charAt(0).toUpperCase() + parts[parts.length - 2].slice(1);
+            }
+            return hostname;
+        } catch (e) {
+            return 'Geçersiz Link';
+        }
     };
 
     const renderAnimes = async () => {
@@ -176,16 +193,17 @@ error("Bölümler yüklenirken hata oluştu: ", error);
         const card = document.createElement('div');
         card.classList.add('episode-card');
         card.innerHTML = `
-            <h4 class="episode-number">${episodeData.number}. Bölüm</h4>
+            <h4 class="episode-number">${episodeData.season}. Sezon - ${episodeData.number}. Bölüm</h4>
             ${animeData ? `<p><b>Anime:</b> ${animeData.name}</p>` : ''}
             <div class="episode-meta">
+                ${episodeData.duration ? `<span><b>Süre:</b> ${episodeData.duration}</span>` : ''}
                 ${episodeData.rating ? `<span><b>Puan:</b> ${episodeData.rating}</span>` : ''}
                 ${episodeData.translator ? `<span><b>Çevirmen:</b> ${episodeData.translator}</span>` : ''}
                 ${episodeData.encoder ? `<span><b>Encoder:</b> ${episodeData.encoder}</span>` : ''}
                 ${episodeData.uploader ? `<span><b>Uploader:</b> ${episodeData.uploader}</span>` : ''}
             </div>
             <ul class="links-list">
-                ${episodeData.links.map(link => `<li><a href="${link}" target="_blank">${new URL(link).hostname}</a></li>`).join('')}
+                ${episodeData.links.map(link => `<li><a href="${link}" target="_blank">${getLinkHost(link)}</a></li>`).join('')}
             </ul>
             <button class="edit-button" data-id="${episodeId}" data-type="episode">
                 <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle" style="filter: invert(1); width:20px;">
@@ -273,7 +291,9 @@ error("Bölümler yüklenirken hata oluştu: ", error);
         } else if (collection === 'episodes') {
             showView('create-episode-view');
             populateAnimeSelect(data.animeId);
+            episodeForm.season.value = data.season || ''; // Yeni
             episodeForm.number.value = data.number;
+            episodeForm.duration.value = data.duration || ''; // Yeni
             episodeForm.rating.value = data.rating || '';
             episodeForm.translator.value = data.translator || '';
             episodeForm.encoder.value = data.encoder || '';
@@ -323,14 +343,16 @@ error("Bölümler yüklenirken hata oluştu: ", error);
         e.preventDefault();
         showSpinner();
         const animeId = episodeForm.animeId.value;
+        const season = parseInt(episodeForm.season.value) || 1; // Yeni
         const number = parseInt(episodeForm.number.value);
+        const duration = episodeForm.duration.value; // Yeni
         const rating = parseFloat(episodeForm.rating.value) || null;
         const translator = episodeForm.translator.value;
         const encoder = episodeForm.encoder.value;
         const uploader = episodeForm.uploader.value;
         const links = episodeForm.links.value.split('\n').filter(link => link.trim() !== '');
         
-        const episodeData = { animeId, number, rating, translator, encoder, uploader, links };
+        const episodeData = { animeId, season, number, duration, rating, translator, encoder, uploader, links };
 
         try {
             if (isEditing) {
@@ -339,11 +361,12 @@ error("Bölümler yüklenirken hata oluştu: ", error);
             } else {
                  const existingEpisode = await db.collection('episodes')
                     .where('animeId', '==', animeId)
+                    .where('season', '==', season) // Yeni
                     .where('number', '==', number)
                     .get();
 
                 if (!existingEpisode.empty) {
-                    alert('Bu anime için bu bölüm numarası zaten mevcut.');
+                    alert('Bu anime için bu sezon ve bölüm numarası zaten mevcut.');
                     hideSpinner();
                     return;
                 }
@@ -354,8 +377,8 @@ error("Bölümler yüklenirken hata oluştu: ", error);
                 });
                 
                 const animeDoc = await db.collection('animes').doc(animeId).get();
-                const animeName = animeDoc.data().name;
-                await sendDiscordNotification(animeName, number, links, translator, encoder, uploader);
+                const animeData = animeDoc.data();
+                await sendDiscordNotification(animeData, episodeData);
                 alert('Bölüm başarıyla eklendi ve bildirim gönderildi!');
             }
             elements.createEpisodeForm.reset();
@@ -372,23 +395,39 @@ error("Bölümler yüklenirken hata oluştu: ", error);
         }
     });
 
-    const sendDiscordNotification = async (animeName, episodeNumber, links, translator, encoder, uploader) => {
+    const sendDiscordNotification = async (animeData, episodeData) => {
         if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("YOUR_WEBHOOK_ID")) {
             console.warn("Discord Webhook URL tanımlanmamış. Bildirim gönderilemedi.");
             return;
         }
+        
+        const fields = [
+            { name: "Sezon", value: `${episodeData.season}`, inline: true },
+            { name: "Bölüm No", value: `${episodeData.number}`, inline: true },
+        ];
+        if (episodeData.duration) {
+             fields.push({ name: "Bölüm Süresi", value: episodeData.duration, inline: true });
+        }
+        if (episodeData.translator) {
+             fields.push({ name: "Çevirmen", value: episodeData.translator, inline: true });
+        }
+        if (episodeData.encoder) {
+             fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
+        }
+        if (episodeData.uploader) {
+             fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
+        }
+        fields.push({ name: "İzleme Linkleri", value: episodeData.links.map(link => `[${getLinkHost(link)}](${link})`).join('\n') || "Belirtilmemiş" });
 
         const payload = {
             embeds: [{
-                title: `${animeName} ${episodeNumber}. Bölüm Çıktı! 🎉`,
+                title: `${animeData.name} ${episodeData.number}. Bölüm Çıktı! 🎉`,
                 description: `Yeni bölüm yayında!`,
                 color: 638681, 
-                fields: [
-                    { name: "Çevirmen", value: translator || "Belirtilmemiş", inline: true },
-                    { name: "Encoder", value: encoder || "Belirtilmemiş", inline: true },
-                    { name: "Uploader", value: uploader || "Belirtilmemiş", inline: true },
-                    { name: "İzleme Linkleri", value: links.map(link => `[${new URL(link).hostname}](${link})`).join('\n') || "Belirtilmemiş" }
-                ],
+                fields: fields,
+                thumbnail: {
+                    url: animeData.imageUrl // Posterin sağ tarafta görünmesi için
+                },
                 timestamp: new Date().toISOString()
             }]
         };
