@@ -3,37 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SomeSubs Panel</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <title>Fansub Paneli</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
     <div class="container">
         <aside class="sidebar">
-            <div class="logo">
-                <i class="fas fa-magic"></i>
-                <span>SomeSubs Panel</span>
-            </div>
-            <nav class="nav-links">
-                <a href="#animes" class="active" data-page="animes"><i class="fas fa-list"></i> Animeler</a>
-                <a href="#create-anime" data-page="create-anime"><i class="fas fa-plus-circle"></i> Anime Oluştur</a>
-                <a href="#episodes" data-page="episodes"><i class="fas fa-list-alt"></i> Bölümler</a>
-                <a href="#create-episode" data-page="create-episode"><i class="fas fa-plus-square"></i> Bölüm Oluştur</a>
+            <h1 class="logo">Fansub Paneli</h1>
+            <nav class="nav">
+                <a href="#animes" class="nav-item active">
+                    <img src="https://www.svgrepo.com/show/440536/anime.svg" alt="Animeler" class="nav-icon">
+                    Animeler
+                </a>
+                <a href="#create-anime" class="nav-item">
+                    <img src="https://www.svgrepo.com/show/440497/plus.svg" alt="Anime Oluştur" class="nav-icon">
+                    Anime Oluştur
+                </a>
+                <a href="#episodes" class="nav-item">
+                    <img src="https://www.svgrepo.com/show/440502/play.svg" alt="Bölümler" class="nav-icon">
+                    Bölümler
+                </a>
+                <a href="#create-episode" class="nav-item">
+                    <img src="https://www.svgrepo.com/show/440498/plus-circle.svg" alt="Bölüm Oluştur" class="nav-icon">
+                    Bölüm Oluştur
+                </a>
             </nav>
-            <div class="sidebar-footer">
-                <i class="fas fa-info-circle"></i> V1.0.0
-            </div>
         </aside>
+        <main class="content">
+            <div id="loading-spinner" class="spinner-container">
+                <div class="spinner"></div>
+            </div>
+            
+            <section id="animes-view" class="view active">
+                <h2>Animeler</h2>
+                <div id="animes-list" class="grid-container"></div>
+            </section>
+            
+            <section id="create-anime-view" class="view hidden">
+                <h2>Anime Oluştur</h2>
+                <form id="create-anime-form" class="form-card">
+                    <input type="text" id="anime-name" placeholder="Anime Adı" required>
+                    <textarea id="anime-description" placeholder="Açıklama" required></textarea>
+                    <input type="url" id="anime-imdb" placeholder="IMDb Linki">
+                    <input type="url" id="anime-image-url" placeholder="Görsel URL" required>
+                    <input type="text" id="anime-genres" placeholder="Türler (virgülle ayırın, ör: Aksiyon,Fantastik)">
+                    <button type="submit">Animeyi Kaydet</button>
+                </form>
+            </section>
+            
+            <section id="episodes-view" class="view hidden">
+                <h2>Tüm Bölümler</h2>
+                <div id="episodes-list" class="grid-container"></div>
+            </section>
 
-        <main class="main-content">
-            <div id="page-content"></div>
+            <section id="create-episode-view" class="view hidden">
+                <h2>Bölüm Oluştur</h2>
+                <form id="create-episode-form" class="form-card">
+                    <select id="episode-anime-select" required>
+                        <option value="">-- Anime Seçin --</option>
+                    </select>
+                    <input type="number" id="episode-number" placeholder="Bölüm Numarası" min="1" required>
+                    <input type="number" id="episode-rating" placeholder="Bölüm Puanı" min="0" max="10" step="0.1">
+                    <input type="text" id="episode-translator" placeholder="Çevirmen">
+                    <input type="text" id="episode-encoder" placeholder="Encoder">
+                    <input type="text" id="episode-uploader" placeholder="Uploader">
+                    <textarea id="episode-links" placeholder="İzleme Linkleri (Her satıra bir link)" required></textarea>
+                    <button type="submit">Bölümü Kaydet ve Bildirim Gönder</button>
+                </form>
+            </section>
+            
+            <section id="anime-detail-view" class="view hidden">
+                <button id="back-to-animes" class="back-button">← Animelere Geri Dön</button>
+                <div id="anime-detail-card" class="detail-card"></div>
+                <h3>Bölümler</h3>
+                <div id="anime-episodes-list" class="grid-container"></div>
+            </section>
         </main>
     </div>
-
-    <div class="loading-spinner" id="loading-spinner">
-        <div class="spinner"></div>
-    </div>
-
-    <script type="module" src="script.js"></script>
+    <script src="scripts.js"></script>
 </body>
 </html>
