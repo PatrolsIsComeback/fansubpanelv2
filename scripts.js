@@ -149,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         elements.animeEpisodesList.innerHTML = '';
         try {
-            // Firestore indeksi hatasını gidermek için bu sorgu önemlidir.
             const snapshot = await db.collection('episodes')
                 .where('animeId', '==', animeId)
                 .orderBy('number', 'asc')
