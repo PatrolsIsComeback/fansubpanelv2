@@ -1,532 +1,492 @@
-:root { 
-    --primary-color: #5a2e98; 
-    --secondary-color: #7b43a9; 
-    --background-color: #121212; 
-    --card-background: #1e1e1e; 
-    --text-color: #e0e0e0; 
-    --light-text-color: #b0b0b0; 
-    --border-color: #333; 
-    --button-bg: #5a2e98; 
-    --button-hover: #4a277e; 
-    --input-bg: #2a2a2a; 
-} 
+/* Google Fonts - Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-body { 
-    font-family: 'Poppins', sans-serif; 
-    background-color: var(--background-color); 
-    color: var(--text-color); 
-    margin: 0; 
-    padding: 0; 
-    display: flex; 
-    min-height: 100vh; 
-} 
+/* --- Genel Stil ve Renkler --- */
+:root {
+    --bg-color: #121212;
+    --card-bg-color: #1e1e1e;
+    --text-color: #ffffff;
+    --secondary-text-color: #a0a0a0;
+    --accent-color: #3b82f6; /* Mavi tonu */
+    --hover-color: #4a90f8;
+    --border-color: #333333;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+}
 
-.container { 
-    display: flex; 
-    width: 100%; 
-} 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-.sidebar { 
-    width: 250px; 
-    background-color: var(--card-background); 
-    padding: 20px; 
-    display: flex; 
-    flex-direction: column; 
-    border-right: 1px solid var(--border-color); 
-    position: fixed; 
-    height: 100%; 
-    box-sizing: border-box; 
-} 
-
-.logo { 
-    color: var(--text-color); 
-    text-align: center; 
-    margin-bottom: 30px; 
-    font-size: 1.5rem; 
-} 
-
-.nav { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 10px; 
-} 
-
-.nav-item { 
-    display: flex; 
-    align-items: center; 
-    padding: 12px 15px; 
-    color: var(--light-text-color); 
-    text-decoration: none; 
-    border-radius: 8px; 
-    transition: background-color 0.2s, color 0.2s; 
-} 
-
-.nav-item:hover, 
-.nav-item.active { 
-    background-color: var(--secondary-color); 
-    color: #fff; 
-} 
-
-.nav-icon { 
-    width: 24px; 
-    height: 24px; 
-    margin-right: 15px; 
-    filter: invert(0.8); 
-    transition: filter 0.2s; 
-} 
-
-.nav-item.active .nav-icon { 
-    filter: invert(1); 
-} 
-
-.content { 
-    flex-grow: 1; 
-    margin-left: 250px; 
-    padding: 20px; 
-    overflow-y: auto; 
-} 
-
-.view { 
-    display: none; 
-} 
-
-.view.active { 
-    display: block; 
-} 
-
-h2 { 
-    color: var(--text-color); 
-    border-bottom: 2px solid var(--primary-color); 
-    padding-bottom: 10px; 
-    margin-bottom: 20px; 
-} 
-
-.grid-container { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
-    gap: 20px; 
-} 
-
-.card, .episode-card { 
-    background-color: var(--card-background); 
-    border-radius: 10px; 
-    overflow: hidden; 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
-    transition: transform 0.2s, box-shadow 0.2s; 
-    cursor: pointer; 
-    display: flex; 
-    flex-direction: column; 
-    position: relative; 
-} 
-
-.card:hover { 
-    transform: translateY(-5px); 
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); 
-} 
-
-.card-image { 
-    width: 100%; 
-    height: 180px; 
-    object-fit: cover; 
-} 
-
-.card-content { 
-    padding: 15px; 
-    flex-grow: 1; 
-} 
-
-.card-title { 
-    font-size: 1.2rem; 
-    margin: 0 0 5px; 
-    color: var(--text-color); 
-} 
-
-.card-description { 
-    font-size: 0.9rem; 
-    color: var(--light-text-color); 
-    height: 60px; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-} 
-
-.detail-card { 
-    background-color: var(--card-background); 
-    border-radius: 10px; 
-    overflow: hidden; 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
-    display: flex; 
-    gap: 20px; 
-    padding: 20px; 
-    margin-bottom: 30px; 
-} 
-
-.detail-image { 
-    width: 300px; 
-    height: 400px; 
-    object-fit: cover; 
-    border-radius: 8px; 
-} 
-
-.detail-content { 
-    flex-grow: 1; 
-    position: relative; 
-} 
-
-.detail-title { 
-    font-size: 2.5rem; 
-    margin: 0 0 10px; 
-    color: var(--text-color); 
-} 
-
-.detail-description { 
-    font-size: 1rem; 
-    color: var(--light-text-color); 
-    line-height: 1.6; 
-} 
-
-.form-card { 
-    background-color: var(--card-background); 
-    padding: 30px; 
-    border-radius: 10px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 15px; 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
-} 
-
-input, textarea, select { 
-    padding: 12px; 
-    border: 1px solid var(--border-color); 
-    background-color: var(--input-bg); 
-    color: var(--text-color); 
-    border-radius: 5px; 
-    font-size: 1rem; 
-    width: 100%; 
-    box-sizing: border-box; 
-} 
-
-input::placeholder, textarea::placeholder { 
-    color: var(--light-text-color); 
-} 
-
-button[type="submit"] { 
-    padding: 12px 20px; 
-    background-color: var(--button-bg); 
-    color: #fff; 
-    border: none; 
-    border-radius: 5px; 
-    font-size: 1rem; 
-    font-weight: 600; 
-    cursor: pointer; 
-    transition: background-color 0.2s; 
-} 
-
-button[type="submit"]:hover { 
-    background-color: var(--button-hover); 
-} 
-
-.episode-card { 
-    background-color: var(--card-background); 
-    padding: 15px; 
-    border-radius: 8px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 8px; 
-    position: relative;
-} 
-
-.episode-card h4 { 
-    margin: 0; 
-    font-size: 1.1rem; 
-    color: var(--text-color); 
-} 
-
-.episode-meta span { 
-    font-size: 0.85rem; 
-    color: var(--light-text-color); 
-    margin-right: 10px; 
-} 
-
-.links-list { 
-    list-style: none; 
-    padding: 0; 
-    margin: 0; 
-    display: flex; 
-    flex-wrap: wrap; 
-    gap: 10px; 
-} 
-
-.links-list li a { 
-    color: var(--primary-color); 
-    text-decoration: none; 
-    font-weight: 600; 
-} 
-
-.edit-button, .delete-button { 
-    position: absolute; 
-    top: 10px; 
-    right: 10px; 
-    background: transparent; 
-    border: none; 
-    cursor: pointer; 
-    padding: 5px; 
-    z-index: 10; 
-} 
-
-.delete-button { 
-    right: 45px; 
-} 
-
-.edit-button img, .delete-button img { 
-    width: 20px; 
-    filter: invert(0.8); 
-    transition: filter 0.2s; 
-} 
-
-.edit-button:hover img, .delete-button:hover img { 
-    filter: invert(1); 
-} 
-
-.back-button { 
-    background-color: transparent; 
-    border: 1px solid var(--primary-color); 
-    color: var(--primary-color); 
-    padding: 10px 15px; 
-    border-radius: 5px; 
-    cursor: pointer; 
-    transition: all 0.2s; 
-    margin-bottom: 20px; 
-    font-weight: 600; 
-} 
-
-.back-button:hover { 
-    background-color: var(--primary-color); 
-    color: var(--text-color); 
-} 
-
-.spinner-container { 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background-color: rgba(0, 0, 0, 0.6); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    z-index: 999; 
-} 
-
-.spinner { 
-    border: 8px solid rgba(255, 255, 255, 0.1); 
-    border-top: 8px solid var(--primary-color); 
-    border-radius: 50%; 
-    width: 60px; 
-    height: 60px; 
-    animation: spin 1s linear infinite; 
-} 
-
-@keyframes spin { 
-    0% { transform: rotate(0deg); } 
-    100% { transform: rotate(360deg); } 
-} 
-
-.hidden { 
-    display: none !important; 
-} 
-
-.episode-card .edit-button, 
-.episode-card .delete-button { 
-    position: absolute; 
-    top: 10px; 
-} 
-
-.episode-card .edit-button { 
-    right: 45px; 
-} 
-
-.episode-card .delete-button { 
-    right: 10px; 
-} 
-
-.episode-card .edit-button img, 
-.episode-card .delete-button img { 
-    width: 20px; 
-    height: 20px; 
-    filter: invert(0.8); 
-    transition: filter 0.2s; 
-} 
-
-.episode-card .edit-button:hover img, 
-.episode-card .delete-button:hover img { 
-    filter: invert(1); 
-} 
-
-.load-more-container { 
-    text-align: center; 
-    margin-top: 20px; 
-} 
-
-.load-more-button { 
-    padding: 12px 25px; 
-    background-color: var(--primary-color); 
-    color: #fff; 
-    border: none; 
-    border-radius: 8px; 
-    font-size: 1rem; 
-    font-weight: 600; 
-    cursor: pointer; 
-    transition: background-color 0.2s; 
-} 
-
-.load-more-button:hover { 
-    background-color: var(--button-hover); 
-} 
-
-/* Yeni Auth Form Stilleri */
-.auth-container {
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+}
+
+/* --- Ana Uygulama ve Layout --- */
+#auth-view, #main-app {
     width: 100%;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-.auth-form-card {
-    background-color: var(--card-background);
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-}
-
-.form-title {
-    font-size: 2rem;
-    margin-bottom: 20px;
-}
-
-.auth-form {
+    max-width: 1200px;
+    margin: 20px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    height: 100%;
+    min-height: 90vh;
 }
 
-.auth-toggle {
-    margin-top: 20px;
-    color: var(--light-text-color);
+@media (min-width: 768px) {
+    #main-app {
+        flex-direction: row;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px var(--shadow-color);
+        overflow: hidden;
+    }
 }
 
-.auth-toggle a {
-    color: var(--primary-color);
-    text-decoration: none;
+.hidden {
+    display: none !important;
+}
+
+/* --- Yükleniyor Spinner --- */
+#loading-spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--border-color);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Sidebar ve Navigasyon --- */
+.sidebar {
+    width: 100%;
+    background-color: var(--card-bg-color);
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .sidebar {
+        width: 250px;
+        min-height: 90vh;
+        flex-direction: column;
+        justify-content: flex-start;
+        border-right: 1px solid var(--border-color);
+    }
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 30px;
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .logo {
+        display: block;
+    }
+}
+
+.nav-item {
+    padding: 12px 15px;
+    margin: 5px 0;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.nav-item:hover, .nav-item.active {
+    background-color: var(--accent-color);
+    color: var(--text-color);
+}
+
+.nav-item.active {
     font-weight: 600;
 }
 
-/* Modal Stilleri */
-.custom-modal {
+.nav-item span {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .nav-item span {
+        display: inline-block;
+        margin-left: 10px;
+    }
+}
+
+.nav-item svg {
+    width: 20px;
+    height: 20px;
+}
+
+.logout-button {
+    background-color: transparent;
+    border: none;
+    color: var(--secondary-text-color);
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: auto;
+    padding: 10px;
+    border-radius: 8px;
+    transition: color 0.3s ease;
+}
+
+.logout-button:hover {
+    color: var(--text-color);
+}
+
+/* --- Ana İçerik Alanı --- */
+.content-area {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Tüm view'lerin görünürlük kontrolü */
+.view {
+    min-height: 100%;
+    display: none; /* Varsayılan olarak tüm view'ler gizlidir */
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.view:not(.hidden) {
+    display: block; /* Sadece "hidden" sınıfına sahip olmayanlar gösterilir */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+h1, h2 {
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* --- Anime ve Bölüm Kartları --- */
+.animes-grid, .episodes-list {
+    display: grid;
+    gap: 20px;
+}
+
+.animes-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.card {
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px var(--shadow-color);
+}
+
+.card-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.card-content {
+    padding: 15px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.card-description {
+    font-size: 14px;
+    color: var(--secondary-text-color);
+}
+
+/* Bölüm Kartları */
+.episode-card {
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.episode-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--secondary-text-color);
+    margin-top: 10px;
+}
+
+.links-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.links-list a {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.links-list a:hover {
+    text-decoration: underline;
+}
+
+/* --- Anime Detay Sayfası --- */
+.anime-detail-card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+    .anime-detail-card {
+        flex-direction: row;
+    }
+}
+
+.detail-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    object-fit: cover;
+}
+
+@media (min-width: 768px) {
+    .detail-image {
+        width: 200px;
+        height: 280px;
+        margin-right: 20px;
+        margin-bottom: 0;
+    }
+}
+
+.detail-content {
+    flex-grow: 1;
+}
+
+/* --- Formlar --- */
+.form-container {
+    background-color: var(--card-bg-color);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.form-container h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--text-color);
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.input-group input,
+.input-group textarea,
+.input-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+.input-group textarea {
+    min-height: 100px;
+}
+
+.input-group input:focus,
+.input-group textarea:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+button {
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+button:hover {
+    background-color: var(--hover-color);
+}
+
+.form-links {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.form-links a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+/* --- Custom Modal --- */
+.custom-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 999;
 }
 
-.modal-content {
-    background-color: var(--card-background);
+.custom-modal {
+    background-color: var(--card-bg-color);
     padding: 30px;
-    border-radius: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px var(--shadow-color);
     text-align: center;
     max-width: 400px;
     width: 90%;
 }
 
-.modal-content p {
-    margin-bottom: 20px;
+.custom-modal p {
+    font-size: 18px;
+    margin-bottom: 25px;
 }
 
-.modal-content button {
-    padding: 10px 20px;
-    background-color: var(--button-bg);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-/* Kayıt İstekleri Stilleri */
-#requests-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
+/* --- İstekler ve Yönetim --- */
 .request-card {
-    background-color: var(--card-background);
-    padding: 15px;
-    border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: var(--card-bg-color);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
 }
 
-.request-info {
-    flex-grow: 1;
+.request-card h4 {
+    margin: 0;
 }
 
-.request-info h4 {
-    margin: 0 0 5px;
-}
-
-.request-buttons button {
-    padding: 8px 15px;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    margin-left: 10px;
+.request-card p {
+    color: var(--secondary-text-color);
+    font-size: 14px;
 }
 
 .request-buttons .accept-btn {
-    background-color: #4CAF50;
-    color: #fff;
+    background-color: green;
+    width: auto;
+    padding: 8px 15px;
+    margin-right: 10px;
 }
 
 .request-buttons .reject-btn {
-    background-color: #f44336;
-    color: #fff;
+    background-color: darkred;
+    width: auto;
+    padding: 8px 15px;
 }
 
-/* Responsive Düzenlemeler */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: static;
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
-    }
-    .content {
-        margin-left: 0;
-    }
-    .container {
-        flex-direction: column;
-    }
-    .detail-card {
-        flex-direction: column;
-        align-items: center;
-    }
-    .detail-image {
-        width: 100%;
-        height: auto;
-        max-width: 300px;
-    }
+/* Düzenle ve Sil Butonları */
+.edit-button, .delete-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 5px;
+    transition: transform 0.2s ease;
+    width: auto;
+}
+
+.edit-button:hover, .delete-button:hover {
+    transform: scale(1.1);
+}
+
+.edit-button img, .delete-button img {
+    width: 20px;
+    height: 20px;
+    filter: invert(1);
+}
+
+.edit-button img {
+    filter: invert(1) drop-shadow(0 0 5px var(--accent-color));
+}
+
+.delete-button img {
+    filter: invert(1) drop-shadow(0 0 5px darkred);
+}
+
+/* Düzenleme ve Silme Butonları için genel container */
+.detail-content .edit-button,
+.detail-content .delete-button,
+.episode-card .edit-button,
+.episode-card .delete-button {
+    display: inline-block;
+    vertical-align: middle;
 }
