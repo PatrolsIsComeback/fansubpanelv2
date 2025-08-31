@@ -55,13 +55,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showView = (id) => {
         elements.views.forEach(view => view.style.display = 'none');
-        const targetView = document.getElementById(id);
-        if (targetView) {
-            targetView.style.display = 'block';
+        const activeView = document.getElementById(id);
+        if (activeView) {
+            activeView.style.display = 'block';
         }
+
         elements.navItems.forEach(item => item.classList.remove('active'));
         const navItem = document.querySelector(`[data-view="${id}"]`);
-        if (navItem) navItem.classList.add('active');
+        if (navItem) {
+            navItem.classList.add('active');
+        }
     };
 
     const showSpinner = () => {
@@ -113,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (error) {
-            console.error("Bölümler yüklenirken hata oluştu: ", error);
+error("Bölümler yüklenirken hata oluştu: ", error);
         } finally {
             hideSpinner();
         }
