@@ -54,19 +54,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentEditId = null;
 
     const showView = (id) => {
-        elements.views.forEach(view => view.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
+        elements.views.forEach(view => view.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
         elements.navItems.forEach(item => item.classList.remove('active'));
         const navItem = document.querySelector(`[data-view="${id}"]`);
         if (navItem) navItem.classList.add('active');
     };
 
     const showSpinner = () => {
-        elements.loadingSpinner.classList.remove('hidden');
+        elements.loadingSpinner.style.display = 'flex';
     };
 
     const hideSpinner = () => {
-        elements.loadingSpinner.classList.add('hidden');
+        elements.loadingSpinner.style.display = 'none';
     };
 
     const renderAnimes = async () => {
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderAnimes();
                 showView('animes-view');
             } else {
-                if (document.getElementById('anime-detail-view').classList.contains('active')) {
+                if (document.getElementById('anime-detail-view').style.display === 'block') {
                     const animeDoc = await db.collection('animes').doc(animeId).get();
                     if (animeDoc.exists) {
                         showAnimeDetail(animeId, animeDoc.data());
