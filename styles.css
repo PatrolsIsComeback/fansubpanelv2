@@ -333,3 +333,50 @@ button[type="submit"]:hover {
 .hidden {
     display: none;
 }
+
+/* ... Diğer CSS kodları ... */
+
+.episode-card .edit-button,
+.episode-card .delete-button {
+    position: static; /* Kartın içinde normal akışa dönmesini sağlar */
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.episode-card .edit-button img,
+.episode-card .delete-button img {
+    width: 20px;
+    height: 20px;
+    filter: invert(0.8);
+    transition: filter 0.2s;
+}
+
+.episode-card .edit-button:hover img,
+.episode-card .delete-button:hover img {
+    filter: invert(1);
+}
+
+.load-more-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.load-more-button {
+    padding: 12px 25px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.load-more-button:hover {
+    background-color: var(--button-hover);
+}
+
+.hidden {
+    display: none;
+}
