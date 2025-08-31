@@ -81,17 +81,17 @@ body {
 
 .content { 
     flex-grow: 1; 
-    margin-left: 250px;
+    margin-left: 250px; 
     padding: 20px; 
     overflow-y: auto; 
 } 
 
 .view { 
-    display: none;
+    display: none; 
 } 
 
 .view.active { 
-    display: block;
+    display: block; 
 } 
 
 h2 { 
@@ -232,7 +232,7 @@ button[type="submit"]:hover {
     display: flex; 
     flex-direction: column; 
     gap: 8px; 
-    position: relative;
+    position: relative; 
 } 
 
 .episode-card h4 { 
@@ -339,9 +339,10 @@ button[type="submit"]:hover {
 .episode-card .delete-button { 
     position: absolute; 
     top: 10px; 
-} 
-
-.episode-card .edit-button { 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    padding: 5px; 
     right: 45px; 
 } 
 
