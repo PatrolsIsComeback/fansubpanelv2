@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.views.forEach(view => view.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
         elements.navItems.forEach(item => item.classList.remove('active'));
-        const navItem = document.querySelector(`.nav-item[href="#${id.replace('-view', '')}"]`);
+        const navItem = document.querySelector(`[data-view="${id}"]`);
         if (navItem) navItem.classList.add('active');
     };
 
@@ -423,11 +423,10 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            const viewId = item.getAttribute('href').substring(1) + '-view';
+            const viewId = item.dataset.view;
             
             showView(viewId);
 
-            // Her tıklamada ilgili veriyi yükle
             if (viewId === 'animes-view') {
                 renderAnimes();
             } else if (viewId === 'episodes-view') {
