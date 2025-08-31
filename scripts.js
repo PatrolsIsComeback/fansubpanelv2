@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         backToAnimesButton: document.getElementById('back-to-animes')
     };
     
-    // Form elemanları
     const animeForm = {
         name: document.getElementById('anime-name'),
         description: document.getElementById('anime-description'),
@@ -425,6 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             const viewId = item.getAttribute('href').substring(1) + '-view';
+            
             showView(viewId);
 
             // Her tıklamada ilgili veriyi yükle
