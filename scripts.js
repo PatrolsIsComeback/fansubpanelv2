@@ -426,6 +426,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const viewId = item.getAttribute('href').substring(1) + '-view';
             showView(viewId);
+
+            // Her tıklamada ilgili veriyi yükle
             if (viewId === 'animes-view') {
                 renderAnimes();
             } else if (viewId === 'episodes-view') {
@@ -450,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAnimes();
     });
 
-    // Başlangıçta animeleri yükle
+    // Sayfa yüklendiğinde varsayılan olarak Animeler sayfasını göster
     renderAnimes();
     showView('animes-view');
 });
