@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Somesubs Yönetim Paneli</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <h1 class="logo">Somesubs Panel</h1>
+            <ul class="nav-links">
+                <li><a href="#" class="nav-item active" data-view="animes-view">Animeler</a></li>
+                <li><a href="#" class="nav-item" data-view="episodes-view">Bölümler</a></li>
+                <li><a href="#" class="nav-item" data-view="create-anime-view">Anime Ekle</a></li>
+                <li><a href="#" class="nav-item" data-view="create-episode-view">Bölüm Ekle</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section id="animes-view" class="view active">
+            <h2>Animeler</h2>
+            <div id="animes-list" class="grid-container"></div>
+            <div id="load-more-container" class="load-more-container">
+                <button id="load-more-animes" class="load-more-button hidden">Daha Fazla Anime Yükle</button>
+            </div>
+        </section>
+
+        <section id="episodes-view" class="view">
+            <h2>Bölümler</h2>
+            <div id="episodes-list" class="list-container"></div>
+        </section>
+
+        <section id="create-anime-view" class="view">
+            <h2>Anime Ekle</h2>
+            <form id="create-anime-form">
+                <label for="anime-name">Anime Adı:</label>
+                <div class="input-with-button">
+                    <input type="text" id="anime-name" required>
+                    <button type="button" id="fetch-anime-data-btn">Bilgileri Çek</button>
+                </div>
+
+                <label for="anime-description">Açıklama:</label>
+                <textarea id="anime-description" rows="4" required></textarea>
+
+                <label for="anime-imdb">IMDb Linki:</label>
+                <input type="text" id="anime-imdb">
+                
+                <label for="anime-image-url">Poster Linki:</label>
+                <input type="text" id="anime-image-url">
+
+                <label for="anime-genres">Türler (virgülle ayırın):</label>
+                <input type="text" id="anime-genres">
+
+                <button type="submit">Animeyi Kaydet</button>
+            </form>
+        </section>
+
+        <section id="create-episode-view" class="view">
+            <h2>Bölüm Ekle</h2>
+            <form id="create-episode-form">
+                <label for="episode-anime-select">Anime Seçin:</label>
+                <select id="episode-anime-select" required></select>
+
+                <label for="episode-season">Sezon:</label>
+                <input type="number" id="episode-season" value="1" required>
+
+                <label for="episode-number">Bölüm Numarası:</label>
+                <input type="number" id="episode-number" required>
+
+                <label for="episode-duration">Süre (örn: 24dk):</label>
+                <input type="text" id="episode-duration">
+
+                <label for="episode-rating">Puan (örn: 8.5):</label>
+                <input type="number" id="episode-rating" step="0.1">
+
+                <label for="episode-translator">Çevirmen:</label>
+                <input type="text" id="episode-translator">
+
+                <label for="episode-encoder">Encoder:</label>
+                <input type="text" id="episode-encoder">
+
+                <label for="episode-uploader">Uploader:</label>
+                <input type="text" id="episode-uploader">
+
+                <label for="episode-links">İndirme Linkleri (her satıra bir link):</label>
+                <textarea id="episode-links" rows="4" required></textarea>
+
+                <button type="submit">Bölümü Kaydet ve Bildirim Gönder</button>
+            </form>
+        </section>
+
+        <section id="anime-detail-view" class="view">
+            <button id="back-to-animes" class="back-button">Geri Dön</button>
+            <div id="anime-detail-card" class="card detail-card"></div>
+            <h3>Bölümler</h3>
+            <div id="anime-episodes-list" class="list-container"></div>
+        </section>
+    </main>
+
+    <div id="loading-spinner" class="loading-spinner"></div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
