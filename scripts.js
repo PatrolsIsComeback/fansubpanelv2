@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
         animeDetailView: document.getElementById('anime-detail-view'),
         animeDetailCard: document.getElementById('anime-detail-card'),
         animeEpisodesList: document.getElementById('anime-episodes-list'),
-        backToAnimesButton: document.getElementById('back-to-animes')
+        backToAnimesButton: document.getElementById('back-to-animes'),
+        loadMoreAnimesButton: document.getElementById('load-more-animes') // Yeni
     };
     
     const animeForm = {
@@ -41,9 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const episodeForm = {
         animeId: document.getElementById('episode-anime-select'),
-        season: document.getElementById('episode-season'), // Yeni eklendi
+        season: document.getElementById('episode-season'),
         number: document.getElementById('episode-number'),
-        duration: document.getElementById('episode-duration'), // Yeni eklendi
+        duration: document.getElementById('episode-duration'),
         rating: document.getElementById('episode-rating'),
         translator: document.getElementById('episode-translator'),
         encoder: document.getElementById('episode-encoder'),
@@ -54,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isEditing = false;
     let currentEditId = null;
+
+    let lastVisibleAnime = null; // Sayfalama için son görünen animeyi tutar
 
     const showView = (id) => {
         elements.views.forEach(view => view.style.display = 'none');
@@ -77,13 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.loadingSpinner.style.display = 'none';
     };
     
-    // URL'den hostname alıp baş harfini büyüten yardımcı fonksiyon
     const getLinkHost = (url) => {
         try {
             const hostname = new URL(url).hostname;
             const parts = hostname.split('.');
             if (parts.length > 1) {
-                // Örneğin "www.animecix.net" -> "Animecix"
                 return parts[parts.length - 2].charAt(0).toUpperCase() + parts[parts.length - 2].slice(1);
             }
             return hostname;
@@ -92,11 +93,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const renderAnimes = async () => {
+    // Sayfalamalı Anime Yükleme Fonksiyonu
+    const renderAnimes = async (loadMore = false) => {
         showSpinner();
-        elements.animesList.innerHTML = '';
+        if (!loadMore) {
+            elements.animesList.innerHTML = '';
+            lastVisibleAnime = null;
+            elements.loadMoreAnimesButton.classList.add('hidden');
+        }
+
+        let query = db.collection('animes').orderBy('name').limit(10);
+        if (lastVisibleAnime) {
+            query = query.startAfter(lastVisibleAnime);
+        }
+        
         try {
-            const snapshot = await db.collection('animes').orderBy('name').get();
+            const snapshot = await query.get();
+            const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+            
             snapshot.forEach(doc => {
                 const anime = doc.data();
                 const card = document.createElement('div');
@@ -111,6 +125,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 card.addEventListener('click', () => showAnimeDetail(doc.id, anime));
                 elements.animesList.appendChild(card);
             });
+
+            if (lastDoc) {
+                lastVisibleAnime = lastDoc;
+                elements.loadMoreAnimesButton.classList.remove('hidden');
+            } else {
+                elements.loadMoreAnimesButton.classList.add('hidden');
+            }
         } catch (error) {
             console.error("Animeler yüklenirken hata oluştu: ", error);
         } finally {
@@ -133,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (error) {
-error("Bölümler yüklenirken hata oluştu: ", error);
+            console.error("Bölümler yüklenirken hata oluştu: ", error);
         } finally {
             hideSpinner();
         }
@@ -206,10 +227,10 @@ error("Bölümler yüklenirken hata oluştu: ", error);
                 ${episodeData.links.map(link => `<li><a href="${link}" target="_blank">${getLinkHost(link)}</a></li>`).join('')}
             </ul>
             <button class="edit-button" data-id="${episodeId}" data-type="episode">
-                <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle" style="filter: invert(1); width:20px;">
+                <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
             </button>
             <button class="delete-button" data-id="${episodeId}" data-type="episode">
-                <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil" style="filter: invert(1); width:20px;">
+                <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
             </button>
         `;
 
@@ -291,9 +312,9 @@ error("Bölümler yüklenirken hata oluştu: ", error);
         } else if (collection === 'episodes') {
             showView('create-episode-view');
             populateAnimeSelect(data.animeId);
-            episodeForm.season.value = data.season || ''; // Yeni
+            episodeForm.season.value = data.season || '';
             episodeForm.number.value = data.number;
-            episodeForm.duration.value = data.duration || ''; // Yeni
+            episodeForm.duration.value = data.duration || '';
             episodeForm.rating.value = data.rating || '';
             episodeForm.translator.value = data.translator || '';
             episodeForm.encoder.value = data.encoder || '';
@@ -343,9 +364,9 @@ error("Bölümler yüklenirken hata oluştu: ", error);
         e.preventDefault();
         showSpinner();
         const animeId = episodeForm.animeId.value;
-        const season = parseInt(episodeForm.season.value) || 1; // Yeni
+        const season = parseInt(episodeForm.season.value) || 1;
         const number = parseInt(episodeForm.number.value);
-        const duration = episodeForm.duration.value; // Yeni
+        const duration = episodeForm.duration.value;
         const rating = parseFloat(episodeForm.rating.value) || null;
         const translator = episodeForm.translator.value;
         const encoder = episodeForm.encoder.value;
@@ -361,7 +382,7 @@ error("Bölümler yüklenirken hata oluştu: ", error);
             } else {
                  const existingEpisode = await db.collection('episodes')
                     .where('animeId', '==', animeId)
-                    .where('season', '==', season) // Yeni
+                    .where('season', '==', season)
                     .where('number', '==', number)
                     .get();
 
@@ -426,7 +447,7 @@ error("Bölümler yüklenirken hata oluştu: ", error);
                 color: 638681, 
                 fields: fields,
                 thumbnail: {
-                    url: animeData.imageUrl // Posterin sağ tarafta görünmesi için
+                    url: animeData.imageUrl
                 },
                 timestamp: new Date().toISOString()
             }]
@@ -473,7 +494,7 @@ error("Bölümler yüklenirken hata oluştu: ", error);
             showView(viewId);
 
             if (viewId === 'animes-view') {
-                renderAnimes();
+                renderAnimes(); // İlk 10 animeyi yükle
             } else if (viewId === 'episodes-view') {
                 renderEpisodes();
             } else if (viewId === 'create-episode-view') {
@@ -494,6 +515,10 @@ error("Bölümler yüklenirken hata oluştu: ", error);
     elements.backToAnimesButton.addEventListener('click', () => {
         showView('animes-view');
         renderAnimes();
+    });
+    
+    elements.loadMoreAnimesButton.addEventListener('click', () => {
+        renderAnimes(true); // Daha fazla anime yükle
     });
 
     // Sayfa yüklendiğinde varsayılan olarak Animeler sayfasını göster
