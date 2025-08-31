@@ -1,4 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Firebase modüler importları
+    const { initializeApp } = firebase;
+    const {
+        getFirestore,
+        collection,
+        doc,
+        getDocs,
+        addDoc,
+        updateDoc,
+        deleteDoc,
+        query,
+        where,
+        orderBy,
+        writeBatch,
+        serverTimestamp
+    } = firebase.firestore;
 
     const firebaseConfig = {
         apiKey: "AIzaSyCpcXdVwJv3LUN8YVknQQBXk9jCw2BeKXo",
@@ -10,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         measurementId: "G-BBLN91Q0TV"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN';
 
@@ -29,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         animeEpisodesList: document.getElementById('anime-episodes-list'),
         backToAnimesButton: document.getElementById('back-to-animes')
     };
-    
+
     const animeForm = {
         name: document.getElementById('anime-name'),
         description: document.getElementById('anime-description'),
@@ -38,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         genres: document.getElementById('anime-genres'),
         submitBtn: document.querySelector('#create-anime-form button')
     };
-    
+
     const episodeForm = {
         animeId: document.getElementById('episode-anime-select'),
         number: document.getElementById('episode-number'),
@@ -73,8 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showSpinner();
         elements.animesList.innerHTML = '';
         try {
-            const snapshot = await db.collection('animes').orderBy('name').get();
-            snapshot.forEach(doc => {
+            const q = query(collection(db, 'animes'), orderBy('name'));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach(doc => {
                 const anime = doc.data();
                 const card = document.createElement('div');
                 card.classList.add('card');
@@ -89,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.animesList.appendChild(card);
             });
         } catch (error) {
-            console.error("Animeler yüklenirken hata oluştu: ", error);
+            console.error("Error fetching animes:", error);
         } finally {
             hideSpinner();
         }
@@ -99,18 +116,19 @@ document.addEventListener('DOMContentLoaded', () => {
         showSpinner();
         elements.episodesList.innerHTML = '';
         try {
-            const snapshot = await db.collection('episodes').orderBy('createdAt', 'desc').get();
-            for (const doc of snapshot.docs) {
+            const q = query(collection(db, 'episodes'), orderBy('createdAt', 'desc'));
+            const querySnapshot = await getDocs(q);
+            for (const doc of querySnapshot.docs) {
                 const episode = doc.data();
-                const animeDoc = await db.collection('animes').doc(episode.animeId).get();
-                if (animeDoc.exists) {
+                const animeDoc = await getDocs(doc(db, 'animes', episode.animeId));
+                if (animeDoc.exists()) {
                     const anime = animeDoc.data();
                     const card = createEpisodeCard(doc.id, episode, anime);
                     elements.episodesList.appendChild(card);
                 }
             }
         } catch (error) {
-            console.error("Bölümler yüklenirken hata oluştu: ", error);
+            console.error("Error fetching episodes:", error);
         } finally {
             hideSpinner();
         }
@@ -133,12 +151,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>
             </div>
         `;
-        
+
         elements.animeDetailCard.querySelector('.edit-button').addEventListener('click', (e) => {
             e.stopPropagation();
             editData('animes', animeId, animeData);
         });
-        
+
         elements.animeDetailCard.querySelector('.delete-button').addEventListener('click', (e) => {
             e.stopPropagation();
             if (confirm('Bu animeyi ve tüm bölümlerini silmek istediğinize emin misiniz?')) {
@@ -148,18 +166,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         elements.animeEpisodesList.innerHTML = '';
         try {
-            const snapshot = await db.collection('episodes')
-                .where('animeId', '==', animeId)
-                .orderBy('number', 'asc')
-                .get();
-
-            snapshot.forEach(doc => {
+            const q = query(collection(db, 'episodes'), where('animeId', '==', animeId), orderBy('number', 'asc'));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach(doc => {
                 const episode = doc.data();
                 const card = createEpisodeCard(doc.id, episode);
                 elements.animeEpisodesList.appendChild(card);
             });
         } catch (error) {
-            console.error("Anime bölümleri yüklenirken hata oluştu: ", error);
+            console.error("Error fetching anime episodes:", error);
         } finally {
             hideSpinner();
         }
@@ -204,18 +219,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return card;
     };
 
-    const deleteData = async (collection, id, animeId = null) => {
+    const deleteData = async (collectionName, id, animeId = null) => {
         showSpinner();
         try {
-            await db.collection(collection).doc(id).delete();
+            await deleteDoc(doc(db, collectionName, id));
             alert('Başarıyla silindi!');
-            if (collection === 'animes') {
+            if (collectionName === 'animes') {
                 renderAnimes();
                 showView('animes-view');
             } else {
                 if (document.getElementById('anime-detail-view').style.display === 'block') {
-                    const animeDoc = await db.collection('animes').doc(animeId).get();
-                    if (animeDoc.exists) {
+                    const animeDoc = await getDoc(doc(db, 'animes', animeId));
+                    if (animeDoc.exists()) {
                         showAnimeDetail(animeId, animeDoc.data());
                     }
                 } else {
@@ -224,39 +239,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         } catch (error) {
-            console.error("Silme işlemi başarısız: ", error);
-            alert('Silme işlemi başarısız oldu.');
-        } finally {
-            hideSpinner();
-        }
-    };
-    
-    const deleteAnimeAndEpisodes = async (animeId) => {
-        showSpinner();
-        try {
-            const batch = db.batch();
-            const episodesSnapshot = await db.collection('episodes').where('animeId', '==', animeId).get();
-            episodesSnapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-            batch.delete(db.collection('animes').doc(animeId));
-            await batch.commit();
-            alert('Anime ve tüm bölümleri başarıyla silindi!');
-            renderAnimes();
-            showView('animes-view');
-        } catch (error) {
-            console.error("Anime ve bölümler silinirken hata oluştu: ", error);
+            console.error("Deletion failed:", error);
             alert('Silme işlemi başarısız oldu.');
         } finally {
             hideSpinner();
         }
     };
 
-    const editData = (collection, id, data) => {
+    const deleteAnimeAndEpisodes = async (animeId) => {
+        showSpinner();
+        try {
+            const batch = writeBatch(db);
+            const q = query(collection(db, 'episodes'), where('animeId', '==', animeId));
+            const episodesSnapshot = await getDocs(q);
+            episodesSnapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            batch.delete(doc(db, 'animes', animeId));
+            await batch.commit();
+            alert('Anime ve tüm bölümleri başarıyla silindi!');
+            renderAnimes();
+            showView('animes-view');
+        } catch (error) {
+            console.error("Error deleting anime and episodes:", error);
+            alert('Silme işlemi başarısız oldu.');
+        } finally {
+            hideSpinner();
+        }
+    };
+
+    const editData = (collectionName, id, data) => {
         isEditing = true;
         currentEditId = id;
-        
-        if (collection === 'animes') {
+
+        if (collectionName === 'animes') {
             showView('create-anime-view');
             animeForm.name.value = data.name;
             animeForm.description.value = data.description;
@@ -264,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
             animeForm.imageUrl.value = data.imageUrl;
             animeForm.genres.value = (data.genres || []).join(', ');
             animeForm.submitBtn.textContent = 'Animeyi Güncelle';
-        } else if (collection === 'episodes') {
+        } else if (collectionName === 'episodes') {
             showView('create-episode-view');
             populateAnimeSelect(data.animeId);
             episodeForm.number.value = data.number;
@@ -285,17 +301,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const imdbUrl = animeForm.imdb.value;
         const imageUrl = animeForm.imageUrl.value;
         const genres = animeForm.genres.value.split(',').map(g => g.trim()).filter(g => g);
-        
+
         const animeData = { name, description, imdbUrl, imageUrl, genres };
 
         try {
             if (isEditing) {
-                await db.collection('animes').doc(currentEditId).update(animeData);
+                await updateDoc(doc(db, 'animes', currentEditId), animeData);
                 alert('Anime başarıyla güncellendi!');
             } else {
-                await db.collection('animes').add({
+                await addDoc(collection(db, 'animes'), {
                     ...animeData,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: serverTimestamp()
                 });
                 alert('Anime başarıyla eklendi!');
             }
@@ -306,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderAnimes();
             showView('animes-view');
         } catch (error) {
-            console.error("İşlem başarısız: ", error);
+            console.error("Operation failed:", error);
             alert('İşlem sırasında bir hata oluştu.');
         } finally {
             hideSpinner();
@@ -323,31 +339,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const encoder = episodeForm.encoder.value;
         const uploader = episodeForm.uploader.value;
         const links = episodeForm.links.value.split('\n').filter(link => link.trim() !== '');
-        
+
         const episodeData = { animeId, number, rating, translator, encoder, uploader, links };
 
         try {
             if (isEditing) {
-                await db.collection('episodes').doc(currentEditId).update(episodeData);
+                await updateDoc(doc(db, 'episodes', currentEditId), episodeData);
                 alert('Bölüm başarıyla güncellendi!');
             } else {
-                 const existingEpisode = await db.collection('episodes')
-                    .where('animeId', '==', animeId)
-                    .where('number', '==', number)
-                    .get();
+                const q = query(collection(db, 'episodes'), where('animeId', '==', animeId), where('number', '==', number));
+                const existingEpisode = await getDocs(q);
 
                 if (!existingEpisode.empty) {
                     alert('Bu anime için bu bölüm numarası zaten mevcut.');
                     hideSpinner();
                     return;
                 }
-                
-                await db.collection('episodes').add({
+
+                await addDoc(collection(db, 'episodes'), {
                     ...episodeData,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: serverTimestamp()
                 });
-                
-                const animeDoc = await db.collection('animes').doc(animeId).get();
+
+                const animeDoc = await getDoc(doc(db, 'animes', animeId));
                 const animeName = animeDoc.data().name;
                 await sendDiscordNotification(animeName, number, links, translator, encoder, uploader);
                 alert('Bölüm başarıyla eklendi ve bildirim gönderildi!');
@@ -359,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderEpisodes();
             showView('episodes-view');
         } catch (error) {
-            console.error("İşlem başarısız: ", error);
+            console.error("Operation failed:", error);
             alert('İşlem sırasında bir hata oluştu.');
         } finally {
             hideSpinner();
@@ -368,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const sendDiscordNotification = async (animeName, episodeNumber, links, translator, encoder, uploader) => {
         if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("YOUR_WEBHOOK_ID")) {
-            console.warn("Discord Webhook URL tanımlanmamış. Bildirim gönderilemedi.");
+            console.warn("Discord Webhook URL not defined. Notification cannot be sent.");
             return;
         }
 
@@ -376,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
             embeds: [{
                 title: `${animeName} ${episodeNumber}. Bölüm Çıktı! 🎉`,
                 description: `Yeni bölüm yayında!`,
-                color: 638681, 
+                color: 638681,
                 fields: [
                     { name: "Çevirmen", value: translator || "Belirtilmemiş", inline: true },
                     { name: "Encoder", value: encoder || "Belirtilmemiş", inline: true },
@@ -394,18 +408,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(payload),
             });
             if (!response.ok) {
-                console.error(`Discord Webhook hatası: ${response.status} - ${response.statusText}`);
+                console.error(`Discord Webhook error: ${response.status} - ${response.statusText}`);
             }
         } catch (error) {
-            console.error("Discord'a bildirim gönderilirken bir hata oluştu: ", error);
+            console.error("An error occurred while sending notification to Discord:", error);
         }
     };
 
     const populateAnimeSelect = async (selectedId = null) => {
         elements.animeSelect.innerHTML = '<option value="">-- Anime Seçin --</option>';
         try {
-            const snapshot = await db.collection('animes').orderBy('name').get();
-            snapshot.forEach(doc => {
+            const q = query(collection(db, 'animes'), orderBy('name'));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach(doc => {
                 const option = document.createElement('option');
                 option.value = doc.id;
                 option.textContent = doc.data().name;
@@ -415,16 +430,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.animeSelect.appendChild(option);
             });
         } catch (error) {
-            console.error("Anime seçme listesi yüklenirken hata oluştu: ", error);
+            console.error("Error populating anime select list:", error);
         }
     };
-    
+
     // Olay Dinleyicileri
     elements.navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             const viewId = item.dataset.view;
-            
+
             showView(viewId);
 
             if (viewId === 'animes-view') {
