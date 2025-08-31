@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         animeDetailCard: document.getElementById('anime-detail-card'),
         animeEpisodesList: document.getElementById('anime-episodes-list'),
         backToAnimesButton: document.getElementById('back-to-animes'),
-        loadMoreAnimesButton: document.getElementById('load-more-animes') // Yeni
+        loadMoreAnimesButton: document.getElementById('load-more-animes')
     };
     
     const animeForm = {
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isEditing = false;
     let currentEditId = null;
 
-    let lastVisibleAnime = null; // Sayfalama için son görünen animeyi tutar
+    let lastVisibleAnime = null;
 
     const showView = (id) => {
         elements.views.forEach(view => view.style.display = 'none');
@@ -93,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Sayfalamalı Anime Yükleme Fonksiyonu
     const renderAnimes = async (loadMore = false) => {
         showSpinner();
         if (!loadMore) {
@@ -170,10 +169,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${animeData.imdbUrl ? `<p class="info-item"><b>IMDb:</b> <a href="${animeData.imdbUrl}" target="_blank">${animeData.imdbUrl}</a></p>` : ''}
                 ${animeData.genres ? `<p class="info-item"><b>Türler:</b> ${animeData.genres.join(', ')}</p>` : ''}
                 <button class="edit-button" data-id="${animeId}" data-type="anime">
-                    <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle" style="filter: invert(1); width:20px;">
+                    <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
                 </button>
                 <button class="delete-button" data-id="${animeId}" data-type="anime">
-                    <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil" style="filter: invert(1); width:20px;">
+                    <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
                 </button>
             </div>
         `;
@@ -327,11 +326,21 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.createAnimeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         showSpinner();
-        const name = animeForm.name.value;
+        const name = animeForm.name.value.trim();
         const description = animeForm.description.value;
         const imdbUrl = animeForm.imdb.value;
         const imageUrl = animeForm.imageUrl.value;
         const genres = animeForm.genres.value.split(',').map(g => g.trim()).filter(g => g);
+        
+        // Yeni kontrol
+        if (!isEditing) {
+            const existingAnime = await db.collection('animes').where('name', '==', name).get();
+            if (!existingAnime.empty) {
+                alert('Bu anime adı zaten mevcut. Lütfen farklı bir isim kullanın.');
+                hideSpinner();
+                return;
+            }
+        }
         
         const animeData = { name, description, imdbUrl, imageUrl, genres };
 
@@ -373,6 +382,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const uploader = episodeForm.uploader.value;
         const links = episodeForm.links.value.split('\n').filter(link => link.trim() !== '');
         
+        // Yeni kontrol
+        if (!isEditing) {
+            const existingEpisode = await db.collection('episodes')
+                .where('animeId', '==', animeId)
+                .where('season', '==', season)
+                .where('number', '==', number)
+                .get();
+
+            if (!existingEpisode.empty) {
+                alert('Bu anime için bu sezon ve bölüm numarası zaten mevcut.');
+                hideSpinner();
+                return;
+            }
+        }
+        
         const episodeData = { animeId, season, number, duration, rating, translator, encoder, uploader, links };
 
         try {
@@ -380,18 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 await db.collection('episodes').doc(currentEditId).update(episodeData);
                 alert('Bölüm başarıyla güncellendi!');
             } else {
-                 const existingEpisode = await db.collection('episodes')
-                    .where('animeId', '==', animeId)
-                    .where('season', '==', season)
-                    .where('number', '==', number)
-                    .get();
-
-                if (!existingEpisode.empty) {
-                    alert('Bu anime için bu sezon ve bölüm numarası zaten mevcut.');
-                    hideSpinner();
-                    return;
-                }
-                
                 await db.collection('episodes').add({
                     ...episodeData,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -494,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showView(viewId);
 
             if (viewId === 'animes-view') {
-                renderAnimes(); // İlk 10 animeyi yükle
+                renderAnimes();
             } else if (viewId === 'episodes-view') {
                 renderEpisodes();
             } else if (viewId === 'create-episode-view') {
@@ -518,10 +530,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     elements.loadMoreAnimesButton.addEventListener('click', () => {
-        renderAnimes(true); // Daha fazla anime yükle
+        renderAnimes(true);
     });
 
-    // Sayfa yüklendiğinde varsayılan olarak Animeler sayfasını göster
     renderAnimes();
     showView('animes-view');
 });
