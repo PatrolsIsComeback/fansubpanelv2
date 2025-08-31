@@ -60,20 +60,22 @@
             </section>
 
             <section id="create-episode-view" class="view hidden">
-                <h2>Bölüm Oluştur</h2>
-                <form id="create-episode-form" class="form-card">
-                    <select id="episode-anime-select" required>
-                        <option value="">-- Anime Seçin --</option>
-                    </select>
-                    <input type="number" id="episode-number" placeholder="Bölüm Numarası" min="1" required>
-                    <input type="number" id="episode-rating" placeholder="Bölüm Puanı" min="0" max="10" step="0.1">
-                    <input type="text" id="episode-translator" placeholder="Çevirmen">
-                    <input type="text" id="episode-encoder" placeholder="Encoder">
-                    <input type="text" id="episode-uploader" placeholder="Uploader">
-                    <textarea id="episode-links" placeholder="İzleme Linkleri (Her satıra bir link)" required></textarea>
-                    <button type="submit">Bölümü Kaydet ve Bildirim Gönder</button>
-                </form>
-            </section>
+    <h2>Bölüm Oluştur</h2>
+    <form id="create-episode-form" class="form-card">
+        <select id="episode-anime-select" required>
+            <option value="">-- Anime Seçin --</option>
+        </select>
+        <input type="number" id="episode-season" placeholder="Sezon" min="1" value="1" required>
+        <input type="number" id="episode-number" placeholder="Bölüm Numarası" min="1" required>
+        <input type="text" id="episode-duration" placeholder="Bölüm Süresi (ör: 24 dakika)">
+        <input type="number" id="episode-rating" placeholder="Bölüm Puanı" min="0" max="10" step="0.1">
+        <input type="text" id="episode-translator" placeholder="Çevirmen">
+        <input type="text" id="episode-encoder" placeholder="Encoder">
+        <input type="text" id="episode-uploader" placeholder="Uploader">
+        <textarea id="episode-links" placeholder="İzleme Linkleri (Her satıra bir link)" required></textarea>
+        <button type="submit">Bölümü Kaydet ve Bildirim Gönder</button>
+    </form>
+</section>
             
             <section id="anime-detail-view" class="view hidden">
                 <button id="back-to-animes" class="back-button">← Animelere Geri Dön</button>
