@@ -86,18 +86,13 @@ body {
     overflow-y: auto; 
 } 
 
-/* Corrected View and Hidden classes */
 .view { 
     display: none; 
 } 
 
 .view.active { 
     display: block; 
-}
-
-.hidden {
-    display: none !important;
-}
+} 
 
 h2 { 
     color: var(--text-color); 
@@ -237,7 +232,7 @@ button[type="submit"]:hover {
     display: flex; 
     flex-direction: column; 
     gap: 8px; 
-    position: relative;
+    position: relative; 
 } 
 
 .episode-card h4 { 
@@ -334,6 +329,59 @@ button[type="submit"]:hover {
 @keyframes spin { 
     0% { transform: rotate(0deg); } 
     100% { transform: rotate(360deg); } 
+} 
+
+.hidden { 
+    display: none !important; 
+} 
+
+.episode-card .edit-button, 
+.episode-card .delete-button { 
+    position: absolute; 
+    top: 10px; 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    padding: 5px; 
+    right: 45px; 
+} 
+
+.episode-card .delete-button { 
+    right: 10px; 
+} 
+
+.episode-card .edit-button img, 
+.episode-card .delete-button img { 
+    width: 20px; 
+    height: 20px; 
+    filter: invert(0.8); 
+    transition: filter 0.2s; 
+} 
+
+.episode-card .edit-button:hover img, 
+.episode-card .delete-button:hover img { 
+    filter: invert(1); 
+} 
+
+.load-more-container { 
+    text-align: center; 
+    margin-top: 20px; 
+} 
+
+.load-more-button { 
+    padding: 12px 25px; 
+    background-color: var(--primary-color); 
+    color: #fff; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 1rem; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: background-color 0.2s; 
+} 
+
+.load-more-button:hover { 
+    background-color: var(--button-hover); 
 } 
 
 /* Yeni Auth Form Stilleri */
