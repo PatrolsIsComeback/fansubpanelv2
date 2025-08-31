@@ -1,12 +1,13 @@
 // Güvenlik Uyarısı: API anahtarlarınızı doğrudan koda gömmeyin.
 // Bu Vercel gibi ortamlarda ortam değişkenleri (environment variables) ile yönetilmelidir.
 const firebaseConfig = {
-    apiKey: "AIzaSyCNj-l_B9kS-4V_6O7H-1Z2Y_3X",
-    authDomain: "fansub-paneli.firebaseapp.com",
-    projectId: "fansub-paneli",
-    storageBucket: "fansub-paneli.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef1234567890",
+    apiKey: "AIzaSyCpcXdVwJv3LUN8YVknQQBXk9jCw2BeKXo",
+  authDomain: "somesubspanel.firebaseapp.com",
+  projectId: "somesubspanel",
+  storageBucket: "somesubspanel.firebasestorage.app",
+  messagingSenderId: "1084301012165",
+  appId: "1:1084301012165:web:29c773daea44b35f8f54ac",
+  measurementId: "G-BBLN91Q0TV"
 };
 
 const DISCORD_WEBHOOK_URL = 'https://ptb.discord.com/api/webhooks/1411290548840693831/3q18pGbU0SFzX76bhGBDqEVdw5XGx_v_oeNYBBkMUDUN3VOj2DPWO4bAtVp-F6HF2mrF';
