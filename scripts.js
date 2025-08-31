@@ -458,4 +458,3 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAnimes();
     showView('animes-view');
 });
-```"
