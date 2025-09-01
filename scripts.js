@@ -1,4 +1,4 @@
-,// Güvenlik Uyarısı: API anahtarlarınızı doğrudan koda gömmeyin.
+// Güvenlik Uyarısı: API anahtarlarınızı doğrudan koda gömmeyin.
 // Bu Vercel gibi ortamlarda ortam değişkenleri (environment variables) ile yönetilmelidir.
 const firebaseConfig = {
     apiKey: "AIzaSyCpcXdVwJv3LUN8YVknQQBXk9jCw2BeKXo",
@@ -10,7 +10,7 @@ const firebaseConfig = {
   measurementId: "G-BBLN91Q0TV"
 };
 
-const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1411290548840693831/3q18pGbU0SFzX76bhGBDqEVdw5XGx_v_oeNYBBkMUDUN3VOj2DPWO4bAtVp-F6HF2mrF';
+const DISCORD_WEBHOOK_URL = 'https://ptb.discord.com/api/webhooks/1411290548840693831/3q18pGbU0SFzX76bhGBDqEVdw5XGx_v_oeNYBBK_MUDUN3VOj2DPWO4bAtVp-F6HF2mrF';
 
 // Firebase ve Firestore'u başlat
 const app = firebase.initializeApp(firebaseConfig);
