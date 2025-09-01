@@ -90,12 +90,12 @@ const hideModal = () => {
 const showView = (id) => {
     elements.views.forEach(view => {
         view.classList.add('hidden');
-        view.classList.remove('active'); // Olası aktif kalma durumunu önle
+        view.classList.remove('active');
     });
     const activeView = document.getElementById(id);
     if (activeView) {
         activeView.classList.remove('hidden');
-        activeView.classList.add('active'); // Yeni görünümü aktif hale getir
+        activeView.classList.add('active');
     }
 
     elements.navItems.forEach(item => item.classList.remove('active'));
@@ -299,7 +299,6 @@ const deleteData = async (collection, id, animeId = null) => {
             renderAnimes();
             showView('animes-view');
         } else {
-            // Bölüm silinirse, ya anime detay sayfasını yenile ya da bölümler listesini yenile
             if (document.getElementById('anime-detail-view').classList.contains('active')) {
                 const animeDoc = await db.collection('animes').doc(animeId).get();
                 if (animeDoc.exists) {
@@ -538,7 +537,6 @@ const populateAnimeSelect = async (selectedId = null) => {
     }
 };
 
-// Yeni: Kayıt isteklerini render etme
 const renderRequests = async () => {
     showSpinner();
     elements.requestsList.innerHTML = '';
@@ -572,15 +570,13 @@ const renderRequests = async () => {
 const acceptRequest = async (requestId, uid, email, discordName) => {
     showSpinner();
     try {
-        // Kullanıcıyı 'users' koleksiyonuna ekle
         await db.collection('users').doc(uid).set({
             email: email,
             discordName: discordName,
-            role: 'user', // Varsayılan rol 'user'
+            role: 'user',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Kayıt isteğini sil
         await db.collection('registrationRequests').doc(requestId).delete();
         showModal(`Kayıt isteği başarıyla onaylandı. ${discordName} artık giriş yapabilir.`);
         renderRequests();
@@ -595,7 +591,6 @@ const acceptRequest = async (requestId, uid, email, discordName) => {
 const rejectRequest = async (requestId, email) => {
     showSpinner();
     try {
-        // Kayıt isteğini sil
         await db.collection('registrationRequests').doc(requestId).delete();
         showModal(`Kayıt isteği başarıyla reddedildi. ${email} kullanıcısı tekrar deneyemez.`);
         renderRequests();
@@ -607,29 +602,21 @@ const rejectRequest = async (requestId, email) => {
     }
 };
 
-// --- Olay Dinleyicileri ---
-
 elements.modalOkButton.addEventListener('click', hideModal);
-
-// Auth Form geçişleri
 elements.showRegisterBtn.addEventListener('click', (e) => {
     e.preventDefault();
     elements.loginFormCard.classList.add('hidden');
     elements.registerFormCard.classList.remove('hidden');
 });
-
 elements.showLoginBtn.addEventListener('click', (e) => {
     e.preventDefault();
     elements.registerFormCard.classList.add('hidden');
     elements.loginFormCard.classList.remove('hidden');
 });
-
-// Giriş Formu
 elements.loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
-
     showSpinner();
     try {
         await auth.signInWithEmailAndPassword(email, password);
@@ -640,20 +627,16 @@ elements.loginForm.addEventListener('submit', async (e) => {
         hideSpinner();
     }
 });
-
-// Kayıt Formu
 elements.registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
     const repeatPassword = document.getElementById('register-password-repeat').value;
     const discordName = document.getElementById('register-discord-name').value;
-
     if (password !== repeatPassword) {
         showModal('Şifreler eşleşmiyor.');
         return;
     }
-
     showSpinner();
     try {
         const existingRequest = await db.collection('registrationRequests').where('email', '==', email).get();
@@ -662,10 +645,8 @@ elements.registerForm.addEventListener('submit', async (e) => {
             hideSpinner();
             return;
         }
-
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
-
         await db.collection('registrationRequests').doc(user.uid).set({
             uid: user.uid,
             email: email,
@@ -673,10 +654,8 @@ elements.registerForm.addEventListener('submit', async (e) => {
             status: 'pending',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
         await auth.signOut();
         showModal('Kayıt isteğiniz başarıyla gönderildi. Yönetici onayı bekleniyor.');
-
     } catch (error) {
         console.error("Kayıt işlemi başarısız: ", error);
         if (error.code === 'auth/email-already-in-use') {
@@ -689,7 +668,6 @@ elements.registerForm.addEventListener('submit', async (e) => {
         elements.registerForm.reset();
     }
 });
-
 elements.logoutButton.addEventListener('click', async () => {
     showSpinner();
     try {
@@ -701,16 +679,11 @@ elements.logoutButton.addEventListener('click', async () => {
         hideSpinner();
     }
 });
-
 elements.navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
         const viewId = item.dataset.view;
-        
-        // Önce view'i değiştir
         showView(viewId);
-
-        // Sonra içeriği yükle
         if (viewId === 'animes-view') {
             renderAnimes();
         } else if (viewId === 'episodes-view') {
@@ -718,4 +691,51 @@ elements.navItems.forEach(item => {
         } else if (viewId === 'create-episode-view') {
             populateAnimeSelect();
             isEditing = false;
-            currentEditId = null
+            currentEditId = null;
+            elements.createEpisodeForm.reset();
+            episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
+        } else if (viewId === 'create-anime-view') {
+            isEditing = false;
+            currentEditId = null;
+            elements.createAnimeForm.reset();
+            animeForm.submitBtn.textContent = 'Animeyi Kaydet';
+        } else if (viewId === 'requests-view') {
+            renderRequests();
+        }
+    });
+});
+elements.backToAnimesButton.addEventListener('click', () => {
+    showView('animes-view');
+    renderAnimes();
+});
+elements.loadMoreAnimesButton.addEventListener('click', () => {
+    renderAnimes(true);
+});
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        showLoadingWithText('Yetki kontrolü yapılıyor...');
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+            currentUser = { ...userDoc.data(), uid: user.uid };
+            elements.authView.classList.add('hidden');
+            elements.mainApp.classList.remove('hidden');
+            if (currentUser.role === 'admin') {
+                elements.requestsNavItem.classList.remove('hidden');
+            } else {
+                elements.requestsNavItem.classList.add('hidden');
+            }
+            renderAnimes();
+            showView('animes-view');
+        } else {
+            await auth.signOut();
+            showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
+        }
+    } else {
+        currentUser = null;
+        elements.mainApp.classList.add('hidden');
+        elements.authView.classList.remove('hidden');
+        elements.loginFormCard.classList.remove('hidden');
+        elements.registerFormCard.classList.add('hidden');
+    }
+    hideSpinner();
+});
