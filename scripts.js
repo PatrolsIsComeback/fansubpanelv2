@@ -295,6 +295,7 @@ const deleteData = async (collection, id, animeId = null) => {
             renderAnimes();
             showView('animes-view');
         } else {
+            // Bölüm silinirse, ya anime detay sayfasını yenile ya da bölümler listesini yenile
             if (document.getElementById('anime-detail-view').classList.contains('active')) {
                 const animeDoc = await db.collection('animes').doc(animeId).get();
                 if (animeDoc.exists) {
@@ -708,7 +709,10 @@ elements.navItems.forEach(item => {
         e.preventDefault();
         const viewId = item.dataset.view;
         
+        // Önce view'i değiştir
         showView(viewId);
+
+        // Sonra içeriği yükle
         if (viewId === 'animes-view') {
             renderAnimes();
         } else if (viewId === 'episodes-view') {
@@ -742,7 +746,7 @@ elements.loadMoreAnimesButton.addEventListener('click', () => {
 // Oturum kontrolü
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        showLoadingWithText('Yetki kontrolü yapılıyor...'); // Spinner'ı göster ve metni ayarla
+        showLoadingWithText('Yetki kontrolü yapılıyor...');
 
         // Kullanıcı giriş yaptı, yetkisini kontrol et
         const userDoc = await db.collection('users').doc(user.uid).get();
@@ -759,21 +763,23 @@ auth.onAuthStateChanged(async (user) => {
                 elements.requestsNavItem.classList.add('hidden');
             }
             
-            // Panelin ilk yüklenişini başlat
-            renderAnimes();
-            showView('animes-view');
+            // Kullanıcının yetkisi onaylandıktan sonra mevcut görünümü yeniden yükle
+            const currentView = document.querySelector('.nav-item.active')?.dataset.view || 'animes-view';
+            showView(currentView);
+            
+            if (currentView === 'animes-view') {
+                renderAnimes();
+            } else if (currentView === 'episodes-view') {
+                renderEpisodes();
+            } else if (currentView === 'requests-view' && currentUser.role === 'admin') {
+                renderRequests();
+            } else if (currentView === 'create-episode-view') {
+                 populateAnimeSelect();
+            }
         } else {
             // Kullanıcı yetkili değil, oturumu kapat ve giriş ekranına dön
             await auth.signOut();
             showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
         }
     } else {
-        // Kullanıcı çıkış yaptı veya oturum açmadı
-        currentUser = null;
-        elements.mainApp.classList.add('hidden');
-        elements.authView.classList.remove('hidden');
-        elements.loginFormCard.classList.remove('hidden');
-        elements.registerFormCard.classList.add('hidden');
-    }
-    hideSpinner();
-});
+        // Kullanıcı
