@@ -2,12 +2,12 @@
 // Bu Vercel gibi ortamlarda ortam değişkenleri (environment variables) ile yönetilmelidir.
 const firebaseConfig = {
     apiKey: "AIzaSyCpcXdVwJv3LUN8YVknQQBXk9jCw2BeKXo",
-  authDomain: "somesubspanel.firebaseapp.com",
-  projectId: "somesubspanel",
-  storageBucket: "somesubspanel.firebasestorage.app",
-  messagingSenderId: "1084301012165",
-  appId: "1:1084301012165:web:29c773daea44b35f8f54ac",
-  measurementId: "G-BBLN91Q0TV"
+    authDomain: "somesubspanel.firebaseapp.com",
+    projectId: "somesubspanel",
+    storageBucket: "somesubspanel.firebasestorage.app",
+    messagingSenderId: "1084301012165",
+    appId: "1:1084301012165:web:29c773daea44b35f8f54ac",
+    measurementId: "G-BBLN91Q0TV"
 };
 
 const DISCORD_WEBHOOK_URL = 'https://ptb.discord.com/api/webhooks/1411290548840693831/3q18pGbU0SFzX76bhGBDqEVdw5XGx_v_oeNYBBK_MUDUN3VOj2DPWO4bAtVp-F6HF2mrF';
@@ -17,6 +17,7 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = app.auth();
 const db = app.firestore();
 
+// DOM elemanlarını tek bir nesnede toplamak, kodun okunabilirliğini artırır.
 const elements = {
     authView: document.getElementById('auth-view'),
     mainApp: document.getElementById('main-app'),
@@ -48,28 +49,27 @@ const elements = {
     customModal: document.getElementById('custom-modal'),
     modalMessage: document.getElementById('modal-message'),
     modalOkButton: document.getElementById('modal-ok-button'),
-};
-
-const animeForm = {
-    name: document.getElementById('anime-name'),
-    description: document.getElementById('anime-description'),
-    imdb: document.getElementById('anime-imdb'),
-    imageUrl: document.getElementById('anime-image-url'),
-    genres: document.getElementById('anime-genres'),
-    submitBtn: document.querySelector('#create-anime-form button')
-};
-
-const episodeForm = {
-    animeId: document.getElementById('episode-anime-select'),
-    season: document.getElementById('episode-season'),
-    number: document.getElementById('episode-number'),
-    duration: document.getElementById('episode-duration'),
-    rating: document.getElementById('episode-rating'),
-    translator: document.getElementById('episode-translator'),
-    encoder: document.getElementById('episode-encoder'),
-    uploader: document.getElementById('episode-uploader'),
-    links: document.getElementById('episode-links'),
-    submitBtn: document.querySelector('#create-episode-form button')
+    // Form elemanları
+    animeForm: {
+        name: document.getElementById('anime-name'),
+        description: document.getElementById('anime-description'),
+        imdb: document.getElementById('anime-imdb'),
+        imageUrl: document.getElementById('anime-image-url'),
+        genres: document.getElementById('anime-genres'),
+        submitBtn: document.querySelector('#create-anime-form button')
+    },
+    episodeForm: {
+        animeId: document.getElementById('episode-anime-select'),
+        season: document.getElementById('episode-season'),
+        number: document.getElementById('episode-number'),
+        duration: document.getElementById('episode-duration'),
+        rating: document.getElementById('episode-rating'),
+        translator: document.getElementById('episode-translator'),
+        encoder: document.getElementById('episode-encoder'),
+        uploader: document.getElementById('episode-uploader'),
+        links: document.getElementById('episode-links'),
+        submitBtn: document.querySelector('#create-episode-form button')
+    }
 };
 
 let isEditing = false;
@@ -77,14 +77,14 @@ let currentEditId = null;
 let lastVisibleAnime = null;
 let currentUser = null;
 
-// Custom modal gösteren fonksiyon
+// Helper fonksiyonlar
 const showModal = (message) => {
     elements.modalMessage.textContent = message;
     elements.customModal.classList.remove('hidden');
 };
 
 const hideModal = () => {
-    elements.modalOkButton.onclick = null; // Eski handler'ı temizle
+    elements.modalOkButton.onclick = null;
     elements.customModal.classList.add('hidden');
 };
 
@@ -102,32 +102,20 @@ const showView = (id) => {
     }
 };
 
-const showSpinner = () => {
-    elements.loadingSpinner.classList.remove('hidden');
-};
-
-const hideSpinner = () => {
-    elements.loadingSpinner.classList.add('hidden');
-};
-
-const showLoadingWithText = (text) => {
-    elements.loadingSpinner.classList.remove('hidden');
-    document.querySelector('.loading-text').textContent = text;
-};
+const showSpinner = () => elements.loadingSpinner.classList.remove('hidden');
+const hideSpinner = () => elements.loadingSpinner.classList.add('hidden');
 
 const getLinkHost = (url) => {
     try {
         const hostname = new URL(url).hostname;
         const parts = hostname.split('.');
-        if (parts.length > 1) {
-            return parts[parts.length - 2].charAt(0).toUpperCase() + parts[parts.length - 2].slice(1);
-        }
-        return hostname;
+        return parts.length > 1 ? parts[parts.length - 2].charAt(0).toUpperCase() + parts[parts.length - 2].slice(1) : hostname;
     } catch (e) {
         return 'Geçersiz Link';
     }
 };
 
+// Veri renderlama fonksiyonları
 const renderAnimes = async (loadMore = false) => {
     showSpinner();
     if (!loadMore) {
@@ -135,7 +123,6 @@ const renderAnimes = async (loadMore = false) => {
         lastVisibleAnime = null;
         elements.loadMoreAnimesButton.classList.add('hidden');
     }
-
     let query = db.collection('animes').orderBy('name').limit(10);
     if (lastVisibleAnime) {
         query = query.startAfter(lastVisibleAnime);
@@ -159,7 +146,6 @@ const renderAnimes = async (loadMore = false) => {
             card.addEventListener('click', () => showAnimeDetail(doc.id, anime));
             elements.animesList.appendChild(card);
         });
-
         if (lastDoc) {
             lastVisibleAnime = lastDoc;
             elements.loadMoreAnimesButton.classList.remove('hidden');
@@ -177,7 +163,7 @@ const renderEpisodes = async () => {
     showSpinner();
     elements.episodesList.innerHTML = '';
     try {
-        const snapshot = await db.collection('episodes').orderBy('createdAt', 'desc').get();
+        const snapshot = await db.collection('episodes').orderBy('createdAt', 'desc').limit(20).get();
         for (const doc of snapshot.docs) {
             const episode = doc.data();
             const animeDoc = await db.collection('animes').doc(episode.animeId).get();
@@ -211,12 +197,10 @@ const showAnimeDetail = async (animeId, animeData) => {
             </button>
         </div>
     `;
-    
     elements.animeDetailCard.querySelector('.edit-button').addEventListener('click', (e) => {
         e.stopPropagation();
         editData('animes', animeId, animeData);
     });
-    
     elements.animeDetailCard.querySelector('.delete-button').addEventListener('click', (e) => {
         e.stopPropagation();
         showModal('Bu animeyi ve tüm bölümlerini silmek istediğinize emin misiniz?');
@@ -225,17 +209,11 @@ const showAnimeDetail = async (animeId, animeData) => {
             deleteAnimeAndEpisodes(animeId);
         };
     });
-
     elements.animeEpisodesList.innerHTML = '';
     try {
-        const snapshot = await db.collection('episodes')
-            .where('animeId', '==', animeId)
-            .orderBy('number', 'asc')
-            .get();
-
+        const snapshot = await db.collection('episodes').where('animeId', '==', animeId).orderBy('number', 'asc').get();
         snapshot.forEach(doc => {
-            const episode = doc.data();
-            const card = createEpisodeCard(doc.id, episode);
+            const card = createEpisodeCard(doc.id, doc.data());
             elements.animeEpisodesList.appendChild(card);
         });
     } catch (error) {
@@ -269,12 +247,10 @@ const createEpisodeCard = (episodeId, episodeData, animeData = null) => {
             <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
         </button>
     `;
-
     card.querySelector('.edit-button').addEventListener('click', (e) => {
         e.stopPropagation();
         editData('episodes', episodeId, episodeData);
     });
-
     card.querySelector('.delete-button').addEventListener('click', (e) => {
         e.stopPropagation();
         showModal('Bu bölümü silmek istediğinize emin misiniz?');
@@ -283,10 +259,10 @@ const createEpisodeCard = (episodeId, episodeData, animeData = null) => {
             deleteData('episodes', episodeId, episodeData.animeId);
         };
     });
-
     return card;
 };
 
+// Veri işlemleri
 const deleteData = async (collection, id, animeId = null) => {
     showSpinner();
     try {
@@ -319,9 +295,7 @@ const deleteAnimeAndEpisodes = async (animeId) => {
     try {
         const batch = db.batch();
         const episodesSnapshot = await db.collection('episodes').where('animeId', '==', animeId).get();
-        episodesSnapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
+        episodesSnapshot.forEach(doc => batch.delete(doc.ref));
         batch.delete(db.collection('animes').doc(animeId));
         await batch.commit();
         showModal('Anime ve tüm bölümleri başarıyla silindi!');
@@ -338,65 +312,58 @@ const deleteAnimeAndEpisodes = async (animeId) => {
 const editData = (collection, id, data) => {
     isEditing = true;
     currentEditId = id;
-    
     if (collection === 'animes') {
         showView('create-anime-view');
-        animeForm.name.value = data.name;
-        animeForm.description.value = data.description;
-        animeForm.imdb.value = data.imdbUrl || '';
-        animeForm.imageUrl.value = data.imageUrl;
-        animeForm.genres.value = (data.genres || []).join(', ');
-        animeForm.submitBtn.textContent = 'Animeyi Güncelle';
+        elements.animeForm.name.value = data.name;
+        elements.animeForm.description.value = data.description;
+        elements.animeForm.imdb.value = data.imdbUrl || '';
+        elements.animeForm.imageUrl.value = data.imageUrl;
+        elements.animeForm.genres.value = (data.genres || []).join(', ');
+        elements.animeForm.submitBtn.textContent = 'Animeyi Güncelle';
     } else if (collection === 'episodes') {
         showView('create-episode-view');
         populateAnimeSelect(data.animeId);
-        episodeForm.season.value = data.season || '';
-        episodeForm.number.value = data.number;
-        episodeForm.duration.value = data.duration || '';
-        episodeForm.rating.value = data.rating || '';
-        episodeForm.translator.value = data.translator || '';
-        episodeForm.encoder.value = data.encoder || '';
-        episodeForm.uploader.value = data.uploader || '';
-        episodeForm.links.value = data.links.join('\n');
-        episodeForm.submitBtn.textContent = 'Bölümü Güncelle';
+        elements.episodeForm.season.value = data.season || '';
+        elements.episodeForm.number.value = data.number;
+        elements.episodeForm.duration.value = data.duration || '';
+        elements.episodeForm.rating.value = data.rating || '';
+        elements.episodeForm.translator.value = data.translator || '';
+        elements.episodeForm.encoder.value = data.encoder || '';
+        elements.episodeForm.uploader.value = data.uploader || '';
+        elements.episodeForm.links.value = data.links.join('\n');
+        elements.episodeForm.submitBtn.textContent = 'Bölümü Güncelle';
     }
 };
 
 elements.createAnimeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     showSpinner();
-    const name = animeForm.name.value.trim();
-    const description = animeForm.description.value;
-    const imdbUrl = animeForm.imdb.value;
-    const imageUrl = animeForm.imageUrl.value;
-    const genres = animeForm.genres.value.split(',').map(g => g.trim()).filter(g => g);
-    
-    if (!isEditing) {
-        const existingAnime = await db.collection('animes').where('name', '==', name).get();
-        if (!existingAnime.empty) {
-            showModal('Bu anime adı zaten mevcut. Lütfen farklı bir isim kullanın.');
-            hideSpinner();
-            return;
-        }
-    }
-    
-    const animeData = { name, description, imdbUrl, imageUrl, genres };
-
+    const { name, description, imdb, imageUrl, genres, submitBtn } = elements.animeForm;
+    const animeData = {
+        name: name.value.trim(),
+        description: description.value,
+        imdbUrl: imdb.value,
+        imageUrl: imageUrl.value,
+        genres: genres.value.split(',').map(g => g.trim()).filter(g => g)
+    };
     try {
-        if (isEditing) {
+        if (!isEditing) {
+            const existingAnime = await db.collection('animes').where('name', '==', animeData.name).get();
+            if (!existingAnime.empty) {
+                showModal('Bu anime adı zaten mevcut. Lütfen farklı bir isim kullanın.');
+                hideSpinner();
+                return;
+            }
+            await db.collection('animes').add({ ...animeData, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            showModal('Anime başarıyla eklendi!');
+        } else {
             await db.collection('animes').doc(currentEditId).update(animeData);
             showModal('Anime başarıyla güncellendi!');
-        } else {
-            await db.collection('animes').add({
-                ...animeData,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showModal('Anime başarıyla eklendi!');
         }
         elements.createAnimeForm.reset();
         isEditing = false;
         currentEditId = null;
-        animeForm.submitBtn.textContent = 'Animeyi Kaydet';
+        submitBtn.textContent = 'Animeyi Kaydet';
         renderAnimes();
         showView('animes-view');
     } catch (error) {
@@ -410,51 +377,44 @@ elements.createAnimeForm.addEventListener('submit', async (e) => {
 elements.createEpisodeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     showSpinner();
-    const animeId = episodeForm.animeId.value;
-    const season = parseInt(episodeForm.season.value) || 1;
-    const number = parseInt(episodeForm.number.value);
-    const duration = episodeForm.duration.value;
-    const rating = parseFloat(episodeForm.rating.value) || null;
-    const translator = episodeForm.translator.value;
-    const encoder = episodeForm.encoder.value;
-    const uploader = episodeForm.uploader.value;
-    const links = episodeForm.links.value.split('\n').filter(link => link.trim() !== '');
-    
-    if (!isEditing) {
-        const existingEpisode = await db.collection('episodes')
-            .where('animeId', '==', animeId)
-            .where('season', '==', season)
-            .where('number', '==', number)
-            .get();
-
-        if (!existingEpisode.empty) {
-            showModal('Bu anime için bu sezon ve bölüm numarası zaten mevcut.');
-            hideSpinner();
-            return;
-        }
-    }
-    
-    const episodeData = { animeId, season, number, duration, rating, translator, encoder, uploader, links };
-
+    const { animeId, season, number, duration, rating, translator, encoder, uploader, links, submitBtn } = elements.episodeForm;
+    const episodeData = {
+        animeId: animeId.value,
+        season: parseInt(season.value) || 1,
+        number: parseInt(number.value),
+        duration: duration.value,
+        rating: parseFloat(rating.value) || null,
+        translator: translator.value,
+        encoder: encoder.value,
+        uploader: uploader.value,
+        links: links.value.split('\n').filter(link => link.trim() !== '')
+    };
     try {
-        if (isEditing) {
+        if (!isEditing) {
+            const existingEpisode = await db.collection('episodes')
+                .where('animeId', '==', episodeData.animeId)
+                .where('season', '==', episodeData.season)
+                .where('number', '==', episodeData.number)
+                .get();
+            if (!existingEpisode.empty) {
+                showModal('Bu anime için bu sezon ve bölüm numarası zaten mevcut.');
+                hideSpinner();
+                return;
+            }
+            await db.collection('episodes').add({ ...episodeData, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+            const animeDoc = await db.collection('animes').doc(episodeData.animeId).get();
+            if (animeDoc.exists) {
+                await sendDiscordNotification(animeDoc.data(), episodeData);
+            }
+            showModal('Bölüm başarıyla eklendi ve bildirim gönderildi!');
+        } else {
             await db.collection('episodes').doc(currentEditId).update(episodeData);
             showModal('Bölüm başarıyla güncellendi!');
-        } else {
-            await db.collection('episodes').add({
-                ...episodeData,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            const animeDoc = await db.collection('animes').doc(animeId).get();
-            const animeData = animeDoc.data();
-            await sendDiscordNotification(animeData, episodeData);
-            showModal('Bölüm başarıyla eklendi ve bildirim gönderildi!');
         }
         elements.createEpisodeForm.reset();
         isEditing = false;
         currentEditId = null;
-        episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
+        submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
         renderEpisodes();
         showView('episodes-view');
     } catch (error) {
@@ -466,27 +426,19 @@ elements.createEpisodeForm.addEventListener('submit', async (e) => {
 });
 
 const sendDiscordNotification = async (animeData, episodeData) => {
+    // Webhook URL'in geçerliliğini kontrol et
     if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("YOUR_WEBHOOK_ID")) {
         console.warn("Discord Webhook URL tanımlanmamış. Bildirim gönderilemedi.");
         return;
     }
-    
     const fields = [
         { name: "Sezon", value: `${episodeData.season}`, inline: true },
         { name: "Bölüm No", value: `${episodeData.number}`, inline: true },
     ];
-    if (episodeData.duration) {
-         fields.push({ name: "Bölüm Süresi", value: episodeData.duration, inline: true });
-    }
-    if (episodeData.translator) {
-         fields.push({ name: "Çevirmen", value: episodeData.translator, inline: true });
-    }
-    if (episodeData.encoder) {
-         fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
-    }
-    if (episodeData.uploader) {
-         fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
-    }
+    if (episodeData.duration) fields.push({ name: "Bölüm Süresi", value: episodeData.duration, inline: true });
+    if (episodeData.translator) fields.push({ name: "Çevirmen", value: episodeData.translator, inline: true });
+    if (episodeData.encoder) fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
+    if (episodeData.uploader) fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
     fields.push({ name: "İzleme Linkleri", value: episodeData.links.map(link => `[${getLinkHost(link)}](${link})`).join('\n') || "Belirtilmemiş" });
 
     const payload = {
@@ -495,13 +447,10 @@ const sendDiscordNotification = async (animeData, episodeData) => {
             description: `Yeni bölüm yayında!`,
             color: 638681, 
             fields: fields,
-            thumbnail: {
-                url: animeData.imageUrl
-            },
+            thumbnail: { url: animeData.imageUrl },
             timestamp: new Date().toISOString()
         }]
     };
-
     try {
         const response = await fetch(DISCORD_WEBHOOK_URL, {
             method: 'POST',
@@ -534,7 +483,7 @@ const populateAnimeSelect = async (selectedId = null) => {
     }
 };
 
-// Yeni: Kayıt isteklerini render etme
+// Kayıt isteklerini yönetme
 const renderRequests = async () => {
     showSpinner();
     elements.requestsList.innerHTML = '';
@@ -568,15 +517,12 @@ const renderRequests = async () => {
 const acceptRequest = async (requestId, uid, email, discordName) => {
     showSpinner();
     try {
-        // Kullanıcıyı 'users' koleksiyonuna ekle
         await db.collection('users').doc(uid).set({
             email: email,
             discordName: discordName,
-            role: 'user', // Varsayılan rol 'user'
+            role: 'user',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        
-        // Kayıt isteğini sil
         await db.collection('registrationRequests').doc(requestId).delete();
         showModal(`Kayıt isteği başarıyla onaylandı. ${discordName} artık giriş yapabilir.`);
         renderRequests();
@@ -591,7 +537,6 @@ const acceptRequest = async (requestId, uid, email, discordName) => {
 const rejectRequest = async (requestId, email) => {
     showSpinner();
     try {
-        // Kayıt isteğini sil
         await db.collection('registrationRequests').doc(requestId).delete();
         showModal(`Kayıt isteği başarıyla reddedildi. ${email} kullanıcısı tekrar deneyemez.`);
         renderRequests();
@@ -604,10 +549,8 @@ const rejectRequest = async (requestId, email) => {
 };
 
 // --- Olay Dinleyicileri ---
-
 elements.modalOkButton.addEventListener('click', hideModal);
 
-// Auth Form geçişleri
 elements.showRegisterBtn.addEventListener('click', (e) => {
     e.preventDefault();
     elements.loginFormCard.classList.add('hidden');
@@ -620,12 +563,10 @@ elements.showLoginBtn.addEventListener('click', (e) => {
     elements.loginFormCard.classList.remove('hidden');
 });
 
-// Giriş Formu (Düzeltilmiş)
 elements.loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
-
     showSpinner();
     try {
         await auth.signInWithEmailAndPassword(email, password);
@@ -637,19 +578,16 @@ elements.loginForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Kayıt Formu
 elements.registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
     const repeatPassword = document.getElementById('register-password-repeat').value;
     const discordName = document.getElementById('register-discord-name').value;
-
     if (password !== repeatPassword) {
         showModal('Şifreler eşleşmiyor.');
         return;
     }
-
     showSpinner();
     try {
         const existingRequest = await db.collection('registrationRequests').where('email', '==', email).get();
@@ -658,10 +596,8 @@ elements.registerForm.addEventListener('submit', async (e) => {
             hideSpinner();
             return;
         }
-
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
-
         await auth.signOut();
         await db.collection('registrationRequests').doc(user.uid).set({
             uid: user.uid,
@@ -670,9 +606,7 @@ elements.registerForm.addEventListener('submit', async (e) => {
             status: 'pending',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
         showModal('Kayıt isteğiniz başarıyla gönderildi. Yönetici onayı bekleniyor.');
-
     } catch (error) {
         console.error("Kayıt işlemi başarısız: ", error);
         if (error.code === 'auth/email-already-in-use') {
@@ -686,4 +620,71 @@ elements.registerForm.addEventListener('submit', async (e) => {
     }
 });
 
-elements.logoutButton.addEventListener('click', async ()
+elements.logoutButton.addEventListener('click', async () => {
+    showSpinner();
+    try {
+        await auth.signOut();
+    } catch (error) {
+        console.error("Çıkış işlemi başarısız: ", error);
+        showModal('Çıkış işlemi sırasında bir hata oluştu.');
+    } finally {
+        hideSpinner();
+    }
+});
+
+elements.navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const viewId = item.dataset.view;
+        showView(viewId);
+        switch (viewId) {
+            case 'animes-view':
+                renderAnimes();
+                break;
+            case 'episodes-view':
+                renderEpisodes();
+                break;
+            case 'create-episode-view':
+                populateAnimeSelect();
+                isEditing = false;
+                currentEditId = null;
+                elements.createEpisodeForm.reset();
+                elements.episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
+                break;
+            case 'create-anime-view':
+                isEditing = false;
+                currentEditId = null;
+                elements.createAnimeForm.reset();
+                elements.animeForm.submitBtn.textContent = 'Animeyi Kaydet';
+                break;
+            case 'requests-view':
+                renderRequests();
+                break;
+            default:
+                break;
+        }
+    });
+});
+
+elements.backToAnimesButton.addEventListener('click', () => {
+    showView('animes-view');
+    renderAnimes();
+});
+
+elements.loadMoreAnimesButton.addEventListener('click', () => renderAnimes(true));
+
+// Oturum kontrolü
+auth.onAuthStateChanged(async (user) => {
+    showSpinner();
+    if (user) {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+            currentUser = { ...userDoc.data(), uid: user.uid };
+            elements.authView.classList.add('hidden');
+            elements.mainApp.classList.remove('hidden');
+            if (currentUser.role === 'admin') {
+                elements.requestsNavItem.classList.remove('hidden');
+            } else {
+                elements.requestsNavItem.classList.add('hidden');
+            }
+            const activeNavItem = document.querySelector('.nav
