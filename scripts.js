@@ -709,10 +709,7 @@ elements.navItems.forEach(item => {
         e.preventDefault();
         const viewId = item.dataset.view;
         
-        // Önce view'i değiştir
         showView(viewId);
-
-        // Sonra içeriği yükle
         if (viewId === 'animes-view') {
             renderAnimes();
         } else if (viewId === 'episodes-view') {
@@ -746,7 +743,7 @@ elements.loadMoreAnimesButton.addEventListener('click', () => {
 // Oturum kontrolü
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        showLoadingWithText('Yetki kontrolü yapılıyor...'); // Spinner'ı göster ve metni ayarla
+        showLoadingWithText('Yetki kontrolü yapılıyor...');
 
         // Kullanıcı giriş yaptı, yetkisini kontrol et
         const userDoc = await db.collection('users').doc(user.uid).get();
