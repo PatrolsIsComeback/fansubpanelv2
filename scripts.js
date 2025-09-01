@@ -84,7 +84,6 @@ const showModal = (message) => {
 };
 
 const hideModal = () => {
-    elements.modalOkButton.onclick = null; // Eski handler'ı temizle
     elements.customModal.classList.add('hidden');
 };
 
@@ -451,3 +450,330 @@ elements.createEpisodeForm.addEventListener('submit', async (e) => {
             await sendDiscordNotification(animeData, episodeData);
             showModal('Bölüm başarıyla eklendi ve bildirim gönderildi!');
         }
+        elements.createEpisodeForm.reset();
+        isEditing = false;
+        currentEditId = null;
+        episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
+        renderEpisodes();
+        showView('episodes-view');
+    } catch (error) {
+        console.error("İşlem başarısız: ", error);
+        showModal('İşlem sırasında bir hata oluştu.');
+    } finally {
+        hideSpinner();
+    }
+});
+
+const sendDiscordNotification = async (animeData, episodeData) => {
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("YOUR_WEBHOOK_ID")) {
+        console.warn("Discord Webhook URL tanımlanmamış. Bildirim gönderilemedi.");
+        return;
+    }
+    
+    const fields = [
+        { name: "Sezon", value: `${episodeData.season}`, inline: true },
+        { name: "Bölüm No", value: `${episodeData.number}`, inline: true },
+    ];
+    if (episodeData.duration) {
+         fields.push({ name: "Bölüm Süresi", value: episodeData.duration, inline: true });
+    }
+    if (episodeData.translator) {
+         fields.push({ name: "Çevirmen", value: episodeData.translator, inline: true });
+    }
+    if (episodeData.encoder) {
+         fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
+    }
+    if (episodeData.uploader) {
+         fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
+    }
+    fields.push({ name: "İzleme Linkleri", value: episodeData.links.map(link => `[${getLinkHost(link)}](${link})`).join('\n') || "Belirtilmemiş" });
+
+    const payload = {
+        embeds: [{
+            title: `${animeData.name} ${episodeData.number}. Bölüm Çıktı! 🎉`,
+            description: `Yeni bölüm yayında!`,
+            color: 638681, 
+            fields: fields,
+            thumbnail: {
+                url: animeData.imageUrl
+            },
+            timestamp: new Date().toISOString()
+        }]
+    };
+
+    try {
+        const response = await fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+            console.error(`Discord Webhook hatası: ${response.status} - ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error("Discord'a bildirim gönderilirken bir hata oluştu: ", error);
+    }
+};
+
+const populateAnimeSelect = async (selectedId = null) => {
+    elements.animeSelect.innerHTML = '<option value="">-- Anime Seçin --</option>';
+    try {
+        const snapshot = await db.collection('animes').orderBy('name').get();
+        snapshot.forEach(doc => {
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.textContent = doc.data().name;
+            if (selectedId && doc.id === selectedId) {
+                option.selected = true;
+            }
+            elements.animeSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error("Anime seçme listesi yüklenirken hata oluştu: ", error);
+    }
+};
+
+// Yeni: Kayıt isteklerini render etme
+const renderRequests = async () => {
+    showSpinner();
+    elements.requestsList.innerHTML = '';
+    try {
+        const snapshot = await db.collection('registrationRequests').where('status', '==', 'pending').get();
+        snapshot.forEach(doc => {
+            const request = doc.data();
+            const card = document.createElement('div');
+            card.classList.add('request-card');
+            card.innerHTML = `
+                <div class="request-info">
+                    <h4>${request.discordName}</h4>
+                    <p>${request.email}</p>
+                </div>
+                <div class="request-buttons">
+                    <button class="accept-btn" data-id="${doc.id}" data-uid="${request.uid}">Onayla</button>
+                    <button class="reject-btn" data-id="${doc.id}">Reddet</button>
+                </div>
+            `;
+            card.querySelector('.accept-btn').addEventListener('click', () => acceptRequest(doc.id, request.uid, request.email, request.discordName));
+            card.querySelector('.reject-btn').addEventListener('click', () => rejectRequest(doc.id, request.email));
+            elements.requestsList.appendChild(card);
+        });
+    } catch (error) {
+        console.error("Kayıt istekleri yüklenirken hata oluştu: ", error);
+    } finally {
+        hideSpinner();
+    }
+};
+
+const acceptRequest = async (requestId, uid, email, discordName) => {
+    showSpinner();
+    try {
+        // Kullanıcıyı 'users' koleksiyonuna ekle
+        await db.collection('users').doc(uid).set({
+            email: email,
+            discordName: discordName,
+            role: 'user', // Varsayılan rol 'user'
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // Kayıt isteğini sil
+        await db.collection('registrationRequests').doc(requestId).delete();
+        showModal(`Kayıt isteği başarıyla onaylandı. ${discordName} artık giriş yapabilir.`);
+        renderRequests();
+    } catch (error) {
+        console.error("Kayıt isteği onaylanırken hata oluştu: ", error);
+        showModal("Kayıt isteği onaylanırken bir hata oluştu.");
+    } finally {
+        hideSpinner();
+    }
+};
+
+const rejectRequest = async (requestId, email) => {
+    showSpinner();
+    try {
+        // Kayıt isteğini sil
+        await db.collection('registrationRequests').doc(requestId).delete();
+        showModal(`Kayıt isteği başarıyla reddedildi. ${email} kullanıcısı tekrar deneyemez.`);
+        renderRequests();
+    } catch (error) {
+        console.error("Kayıt isteği reddedilirken hata oluştu: ", error);
+        showModal("Kayıt isteği reddedilirken bir hata oluştu.");
+    } finally {
+        hideSpinner();
+    }
+};
+
+// --- Olay Dinleyicileri ---
+
+elements.modalOkButton.addEventListener('click', hideModal);
+
+// Auth Form geçişleri
+elements.showRegisterBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    elements.loginFormCard.classList.add('hidden');
+    elements.registerFormCard.classList.remove('hidden');
+});
+
+elements.showLoginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    elements.registerFormCard.classList.add('hidden');
+    elements.loginFormCard.classList.remove('hidden');
+});
+
+// Giriş Formu (Düzeltilmiş)
+elements.loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    showSpinner();
+    try {
+        // Doğrudan giriş yapmayı dene
+        await auth.signInWithEmailAndPassword(email, password);
+        // onAuthStateChanged listener'ı kalan işi halledecek
+    } catch (error) {
+        console.error("Giriş işlemi başarısız: ", error);
+        showModal('Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.');
+    } finally {
+        hideSpinner();
+    }
+});
+
+// Kayıt Formu
+elements.registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const repeatPassword = document.getElementById('register-password-repeat').value;
+    const discordName = document.getElementById('register-discord-name').value;
+
+    if (password !== repeatPassword) {
+        showModal('Şifreler eşleşmiyor.');
+        return;
+    }
+
+    showSpinner();
+    try {
+        // E-posta'nın daha önce kayıt edilip edilmediğini kontrol et
+        const existingRequest = await db.collection('registrationRequests').where('email', '==', email).get();
+        if (!existingRequest.empty) {
+            showModal('Bu e-posta adresi için zaten bir kayıt isteği bulunmaktadır.');
+            hideSpinner();
+            return;
+        }
+
+        // Firebase Auth'ta kullanıcı oluştur
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        // Firestore'a kayıt isteği belgesi ekle
+        await db.collection('registrationRequests').doc(user.uid).set({
+            uid: user.uid,
+            email: email,
+            discordName: discordName,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Kullanıcının oturumunu kapat, yetkisi olmadığı için
+        await auth.signOut();
+        showModal('Kayıt isteğiniz başarıyla gönderildi. Yönetici onayı bekleniyor.');
+
+    } catch (error) {
+        console.error("Kayıt işlemi başarısız: ", error);
+        if (error.code === 'auth/email-already-in-use') {
+            showModal('Bu e-posta adresi zaten kullanılıyor. Lütfen farklı bir e-posta kullanın.');
+        } else {
+            showModal(`Kayıt sırasında bir hata oluştu: ${error.message}`);
+        }
+    } finally {
+        hideSpinner();
+        elements.registerForm.reset();
+    }
+});
+
+elements.logoutButton.addEventListener('click', async () => {
+    showSpinner();
+    try {
+        await auth.signOut();
+    } catch (error) {
+        console.error("Çıkış işlemi başarısız: ", error);
+        showModal('Çıkış işlemi sırasında bir hata oluştu.');
+    } finally {
+        hideSpinner();
+    }
+});
+
+elements.navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const viewId = item.dataset.view;
+        
+        showView(viewId);
+        if (viewId === 'animes-view') {
+            renderAnimes();
+        } else if (viewId === 'episodes-view') {
+            renderEpisodes();
+        } else if (viewId === 'create-episode-view') {
+            populateAnimeSelect();
+            isEditing = false;
+            currentEditId = null;
+            elements.createEpisodeForm.reset();
+            episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
+        } else if (viewId === 'create-anime-view') {
+            isEditing = false;
+            currentEditId = null;
+            elements.createAnimeForm.reset();
+            animeForm.submitBtn.textContent = 'Animeyi Kaydet';
+        } else if (viewId === 'requests-view') {
+            renderRequests();
+        }
+    });
+});
+
+elements.backToAnimesButton.addEventListener('click', () => {
+    showView('animes-view');
+    renderAnimes();
+});
+
+elements.loadMoreAnimesButton.addEventListener('click', () => {
+    renderAnimes(true);
+});
+
+// Oturum kontrolü
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        showLoadingWithText('Yetki kontrolü yapılıyor...'); // Spinner'ı göster ve metni ayarla
+
+        // Kullanıcı giriş yaptı, yetkisini kontrol et
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+            // Kullanıcı yetkili, ana uygulamayı göster
+            currentUser = { ...userDoc.data(), uid: user.uid };
+            elements.authView.classList.add('hidden');
+            elements.mainApp.classList.remove('hidden');
+            
+            // Eğer kullanıcı admin ise, istekler panelini göster
+            if (currentUser.role === 'admin') {
+                elements.requestsNavItem.classList.remove('hidden');
+            } else {
+                elements.requestsNavItem.classList.add('hidden');
+            }
+            
+            // Panelin ilk yüklenişini başlat
+            renderAnimes();
+            showView('animes-view');
+        } else {
+            // Kullanıcı yetkili değil, oturumu kapat ve giriş ekranına dön
+            await auth.signOut();
+            showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
+        }
+    } else {
+        // Kullanıcı çıkış yaptı veya oturum açmadı
+        currentUser = null;
+        elements.mainApp.classList.add('hidden');
+        elements.authView.classList.remove('hidden');
+        elements.loginFormCard.classList.remove('hidden');
+        elements.registerFormCard.classList.add('hidden');
+    }
+    hideSpinner();
+});
