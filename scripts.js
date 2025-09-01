@@ -2,15 +2,16 @@
 // Bu Vercel gibi ortamlarda ortam değişkenleri (environment variables) ile yönetilmelidir.
 const firebaseConfig = {
     apiKey: "AIzaSyCpcXdVwJv3LUN8YVknQQBXk9jCw2BeKXo",
-  authDomain: "somesubspanel.firebaseapp.com",
-  projectId: "somesubspanel",
-  storageBucket: "somesubspanel.firebasestorage.app",
-  messagingSenderId: "1084301012165",
-  appId: "1:1084301012165:web:29c773daea44b35f8f54ac",
-  measurementId: "G-BBLN91Q0TV"
+    authDomain: "somesubspanel.firebaseapp.com",
+    projectId: "somesubspanel",
+    storageBucket: "somesubspanel.firebasestorage.app",
+    messagingSenderId: "1084301012165",
+    appId: "1:1084301012165:web:29c773daea44b35f8f54ac",
+    measurementId: "G-BBLN91Q0TV"
 };
 
-const DISCORD_WEBHOOK_URL = 'https://ptb.discord.com/api/webhooks/1411290548840693831/3q18pGbU0SFzX76bhGBDqEVdw5XGx_v_oeNYBBK_MUDUN3VOj2DPWO4bAtVp-F6HF2mrF';
+// YENİ WEBHOOK URL'İNİZİ BURAYA YAPIŞTIRIN
+const DISCORD_WEBHOOK_URL = 'https://ptb.discord.com/api/webhooks/1412096309665468456/_qe6E0PERQDh2clVjXIltY3V1argJeCWdqyf6m00-U1vVn53fsGTHw1dm9tKFV6ePAnT';
 
 // Firebase ve Firestore'u başlat
 const app = firebase.initializeApp(firebaseConfig);
@@ -479,16 +480,17 @@ const sendDiscordNotification = async (animeData, episodeData) => {
         { name: "Bölüm No", value: `${episodeData.number}`, inline: true },
     ];
     if (episodeData.duration) {
-         fields.push({ name: "Bölüm Süresi", value: episodeData.duration, inline: true });
+        fields.push({ name: "Bölüm Süresi", value: episodeData.duration, inline: true });
     }
     if (episodeData.translator) {
-         fields.push({ name: "Çevirmen", value: episodeData.translator, inline: true });
+        fields.push({ name: "Çevirmen", value: episodeData.translator, inline: true });
     }
     if (episodeData.encoder) {
-         fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
+        fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
+    }
     }
     if (episodeData.uploader) {
-         fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
+        fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
     }
     fields.push({ name: "İzleme Linkleri", value: episodeData.links.map(link => `[${getLinkHost(link)}](${link})`).join('\n') || "Belirtilmemiş" });
 
