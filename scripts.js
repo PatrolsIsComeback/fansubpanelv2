@@ -686,36 +686,4 @@ elements.registerForm.addEventListener('submit', async (e) => {
     }
 });
 
-elements.logoutButton.addEventListener('click', async () => {
-    showSpinner();
-    try {
-        await auth.signOut();
-    } catch (error) {
-        console.error("Çıkış işlemi başarısız: ", error);
-        showModal('Çıkış işlemi sırasında bir hata oluştu.');
-    } finally {
-        hideSpinner();
-    }
-});
-
-elements.navItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const viewId = item.dataset.view;
-        
-        showView(viewId);
-        if (viewId === 'animes-view') {
-            renderAnimes();
-        } else if (viewId === 'episodes-view') {
-            renderEpisodes();
-        } else if (viewId === 'create-episode-view') {
-            populateAnimeSelect();
-            isEditing = false;
-            currentEditId = null;
-            elements.createEpisodeForm.reset();
-            episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
-        } else if (viewId === 'create-anime-view') {
-            isEditing = false;
-            currentEditId = null;
-            elements.createAnimeForm.reset();
-            anime
+elements.logoutButton.addEventListener('click', async ()
