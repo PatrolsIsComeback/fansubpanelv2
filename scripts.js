@@ -11,7 +11,7 @@ const firebaseConfig = {
 };
 
 // YENİ VE GEÇERLİ DISCORD WEBHOOK URL'İNİZİ BURAYA YAPIŞTIRIN
-const DISCORD_WEBHOOK_URL = 'YENİ WEBHOOK URL BURAYA GELECEK';
+const DISCORD_WEBHOOK_URL = 'https://ptb.discord.com/api/webhooks/1412096309665468456/_qe6E0PERQDh2clVjXIltY3V1argJeCWdqyf6m00-U1vVn53fsGTHw1dm9tKFV6ePAnT';
 
 // Firebase ve Firestore'u başlat
 const app = firebase.initializeApp(firebaseConfig);
