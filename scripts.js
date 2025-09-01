@@ -88,10 +88,14 @@ const hideModal = () => {
 };
 
 const showView = (id) => {
-    elements.views.forEach(view => view.classList.add('hidden'));
+    elements.views.forEach(view => {
+        view.classList.add('hidden');
+        view.classList.remove('active'); // Olası aktif kalma durumunu önle
+    });
     const activeView = document.getElementById(id);
     if (activeView) {
         activeView.classList.remove('hidden');
+        activeView.classList.add('active'); // Yeni görünümü aktif hale getir
     }
 
     elements.navItems.forEach(item => item.classList.remove('active'));
@@ -620,7 +624,7 @@ elements.showLoginBtn.addEventListener('click', (e) => {
     elements.loginFormCard.classList.remove('hidden');
 });
 
-// Giriş Formu (Düzeltilmiş)
+// Giriş Formu
 elements.loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -628,9 +632,7 @@ elements.loginForm.addEventListener('submit', async (e) => {
 
     showSpinner();
     try {
-        // Doğrudan giriş yapmayı dene
         await auth.signInWithEmailAndPassword(email, password);
-        // onAuthStateChanged listener'ı kalan işi halledecek
     } catch (error) {
         console.error("Giriş işlemi başarısız: ", error);
         showModal('Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.');
@@ -654,7 +656,6 @@ elements.registerForm.addEventListener('submit', async (e) => {
 
     showSpinner();
     try {
-        // E-posta'nın daha önce kayıt edilip edilmediğini kontrol et
         const existingRequest = await db.collection('registrationRequests').where('email', '==', email).get();
         if (!existingRequest.empty) {
             showModal('Bu e-posta adresi için zaten bir kayıt isteği bulunmaktadır.');
@@ -662,11 +663,9 @@ elements.registerForm.addEventListener('submit', async (e) => {
             return;
         }
 
-        // Firebase Auth'ta kullanıcı oluştur
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // Firestore'a kayıt isteği belgesi ekle
         await db.collection('registrationRequests').doc(user.uid).set({
             uid: user.uid,
             email: email,
@@ -675,7 +674,6 @@ elements.registerForm.addEventListener('submit', async (e) => {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Kullanıcının oturumunu kapat, yetkisi olmadığı için
         await auth.signOut();
         showModal('Kayıt isteğiniz başarıyla gönderildi. Yönetici onayı bekleniyor.');
 
@@ -709,7 +707,10 @@ elements.navItems.forEach(item => {
         e.preventDefault();
         const viewId = item.dataset.view;
         
+        // Önce view'i değiştir
         showView(viewId);
+
+        // Sonra içeriği yükle
         if (viewId === 'animes-view') {
             renderAnimes();
         } else if (viewId === 'episodes-view') {
@@ -717,64 +718,4 @@ elements.navItems.forEach(item => {
         } else if (viewId === 'create-episode-view') {
             populateAnimeSelect();
             isEditing = false;
-            currentEditId = null;
-            elements.createEpisodeForm.reset();
-            episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
-        } else if (viewId === 'create-anime-view') {
-            isEditing = false;
-            currentEditId = null;
-            elements.createAnimeForm.reset();
-            animeForm.submitBtn.textContent = 'Animeyi Kaydet';
-        } else if (viewId === 'requests-view') {
-            renderRequests();
-        }
-    });
-});
-
-elements.backToAnimesButton.addEventListener('click', () => {
-    showView('animes-view');
-    renderAnimes();
-});
-
-elements.loadMoreAnimesButton.addEventListener('click', () => {
-    renderAnimes(true);
-});
-
-// Oturum kontrolü
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        showLoadingWithText('Yetki kontrolü yapılıyor...');
-
-        // Kullanıcı giriş yaptı, yetkisini kontrol et
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-            // Kullanıcı yetkili, ana uygulamayı göster
-            currentUser = { ...userDoc.data(), uid: user.uid };
-            elements.authView.classList.add('hidden');
-            elements.mainApp.classList.remove('hidden');
-            
-            // Eğer kullanıcı admin ise, istekler panelini göster
-            if (currentUser.role === 'admin') {
-                elements.requestsNavItem.classList.remove('hidden');
-            } else {
-                elements.requestsNavItem.classList.add('hidden');
-            }
-            
-            // Panelin ilk yüklenişini başlat
-            renderAnimes();
-            showView('animes-view');
-        } else {
-            // Kullanıcı yetkili değil, oturumu kapat ve giriş ekranına dön
-            await auth.signOut();
-            showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
-        }
-    } else {
-        // Kullanıcı çıkış yaptı veya oturum açmadı
-        currentUser = null;
-        elements.mainApp.classList.add('hidden');
-        elements.authView.classList.remove('hidden');
-        elements.loginFormCard.classList.remove('hidden');
-        elements.registerFormCard.classList.add('hidden');
-    }
-    hideSpinner();
-});
+            currentEditId = null
