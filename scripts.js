@@ -746,7 +746,7 @@ elements.loadMoreAnimesButton.addEventListener('click', () => {
 // Oturum kontrolü
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        showLoadingWithText('Yetki kontrolü yapılıyor...');
+        showLoadingWithText('Yetki kontrolü yapılıyor...'); // Spinner'ı göster ve metni ayarla
 
         // Kullanıcı giriş yaptı, yetkisini kontrol et
         const userDoc = await db.collection('users').doc(user.uid).get();
@@ -763,23 +763,21 @@ auth.onAuthStateChanged(async (user) => {
                 elements.requestsNavItem.classList.add('hidden');
             }
             
-            // Kullanıcının yetkisi onaylandıktan sonra mevcut görünümü yeniden yükle
-            const currentView = document.querySelector('.nav-item.active')?.dataset.view || 'animes-view';
-            showView(currentView);
-            
-            if (currentView === 'animes-view') {
-                renderAnimes();
-            } else if (currentView === 'episodes-view') {
-                renderEpisodes();
-            } else if (currentView === 'requests-view' && currentUser.role === 'admin') {
-                renderRequests();
-            } else if (currentView === 'create-episode-view') {
-                 populateAnimeSelect();
-            }
+            // Panelin ilk yüklenişini başlat
+            renderAnimes();
+            showView('animes-view');
         } else {
             // Kullanıcı yetkili değil, oturumu kapat ve giriş ekranına dön
             await auth.signOut();
             showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
         }
     } else {
-        // Kullanıcı
+        // Kullanıcı çıkış yaptı veya oturum açmadı
+        currentUser = null;
+        elements.mainApp.classList.add('hidden');
+        elements.authView.classList.remove('hidden');
+        elements.loginFormCard.classList.remove('hidden');
+        elements.registerFormCard.classList.add('hidden');
+    }
+    hideSpinner();
+});
