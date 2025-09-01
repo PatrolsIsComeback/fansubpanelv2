@@ -469,7 +469,7 @@ elements.createEpisodeForm.addEventListener('submit', async (e) => {
 });
 
 const sendDiscordNotification = async (animeData, episodeData) => {
-    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes("YOUR_WEBHOOK_ID")) {
+    if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.length === 0) {
         console.warn("Discord Webhook URL tanımlanmamış. Bildirim gönderilemedi.");
         return;
     }
@@ -512,7 +512,8 @@ const sendDiscordNotification = async (animeData, episodeData) => {
             body: JSON.stringify(payload),
         });
         if (!response.ok) {
-            console.error(`Discord Webhook hatası: ${response.status} - ${response.statusText}`);
+            const errorText = await response.text();
+            console.error(`Discord Webhook hatası: ${response.status} - ${response.statusText}`, errorText);
         }
     } catch (error) {
         console.error("Discord'a bildirim gönderilirken bir hata oluştu: ", error);
