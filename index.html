@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fansub Paneli</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div id="auth-view" class="auth-container">
+        <div id="login-form-card" class="auth-form-card">
+            <h2 class="form-title">Giriş Yap</h2>
+            <form id="login-form" class="auth-form">
+                <input type="email" id="login-email" placeholder="E-Posta" required>
+                <input type="password" id="login-password" placeholder="Şifre" required>
+                <button type="submit">Giriş</button>
+            </form>
+            <p class="auth-toggle">Hesabın yok mu? <a href="#" id="show-register">Kayıt Ol</a></p>
+        </div>
+        <div id="register-form-card" class="auth-form-card hidden">
+            <h2 class="form-title">Kayıt Ol</h2>
+            <form id="register-form" class="auth-form">
+                <input type="text" id="register-discord-name" placeholder="Discord Adı" required>
+                <input type="email" id="register-email" placeholder="E-Posta" required>
+                <input type="password" id="register-password" placeholder="Şifre" required>
+                <input type="password" id="register-password-repeat" placeholder="Şifre (Tekrar)" required>
+                <button type="submit">Kayıt İsteği Gönder</button>
+            </form>
+            <p class="auth-toggle">Zaten bir hesabın var mı? <a href="#" id="show-login">Giriş Yap</a></p>
+        </div>
+    </div>
+
+    <div id="main-app" class="container hidden">
+        <aside class="sidebar">
+            <h1 class="logo">Fansub Paneli</h1>
+            <nav class="nav">
+                <a href="#" class="nav-item active" data-view="animes-view">
+                    <img src="https://www.svgrepo.com/show/440536/anime.svg" alt="Animeler" class="nav-icon">
+                    Animeler
+                </a>
+                <a href="#" class="nav-item" data-view="create-anime-view">
+                    <img src="https://www.svgrepo.com/show/440497/plus.svg" alt="Anime Oluştur" class="nav-icon">
+                    Anime Oluştur
+                </a>
+                <a href="#" class="nav-item" data-view="episodes-view">
+                    <img src="https://www.svgrepo.com/show/440502/play.svg" alt="Bölümler" class="nav-icon">
+                    Bölümler
+                </a>
+                <a href="#" class="nav-item" data-view="create-episode-view">
+                    <img src="https://www.svgrepo.com/show/440498/plus-circle.svg" alt="Bölüm Oluştur" class="nav-icon">
+                    Bölüm Oluştur
+                </a>
+                <a href="#" class="nav-item hidden" data-view="requests-view" id="requests-nav-item">
+                    <img src="https://www.svgrepo.com/show/440496/user-plus.svg" alt="Kayıt İstekleri" class="nav-icon">
+                    Kayıt İstekleri
+                </a>
+                <a href="#" class="nav-item" id="logout-button">
+                    <img src="https://www.svgrepo.com/show/440523/logout.svg" alt="Çıkış Yap" class="nav-icon">
+                    Çıkış Yap
+                </a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <div id="loading-spinner" class="spinner-container hidden">
+                <div class="spinner"></div>
+                <p class="loading-text"></p>
+            </div>
+            
+            <section id="animes-view" class="view active">
+                <h2>Animeler</h2>
+                <div id="animes-list" class="grid-container"></div>
+                <div id="load-more-container" class="load-more-container">
+                    <button id="load-more-animes" class="load-more-button hidden">Daha Fazla Anime Yükle</button>
+                </div>
+            </section>
+            
+            <section id="create-anime-view" class="view hidden">
+                <h2>Anime Oluştur</h2>
+                <form id="create-anime-form" class="form-card">
+                    <input type="text" id="anime-name" placeholder="Anime Adı" required>
+                    <textarea id="anime-description" placeholder="Açıklama" required></textarea>
+                    <input type="url" id="anime-imdb" placeholder="IMDb Linki">
+                    <input type="url" id="anime-image-url" placeholder="Görsel URL" required>
+                    <input type="text" id="anime-genres" placeholder="Türler (virgülle ayırın, ör: Aksiyon,Fantastik)">
+                    <button type="submit">Animeyi Kaydet</button>
+                </form>
+            </section>
+            
+            <section id="episodes-view" class="view hidden">
+                <h2>Tüm Bölümler</h2>
+                <div id="episodes-list" class="grid-container"></div>
+            </section>
+
+            <section id="create-episode-view" class="view hidden">
+                <h2>Bölüm Oluştur</h2>
+                <form id="create-episode-form" class="form-card">
+                    <select id="episode-anime-select" required>
+                        <option value="">-- Anime Seçin --</option>
+                    </select>
+                    <input type="number" id="episode-season" placeholder="Sezon" min="1" value="1" required>
+                    <input type="number" id="episode-number" placeholder="Bölüm Numarası" min="1" required>
+                    <input type="text" id="episode-duration" placeholder="Bölüm Süresi (ör: 24 dakika)">
+                    <input type="number" id="episode-rating" placeholder="Bölüm Puanı" min="0" max="10" step="0.1">
+                    <input type="text" id="episode-translator" placeholder="Çevirmen">
+                    <input type="text" id="episode-encoder" placeholder="Encoder">
+                    <input type="text" id="episode-uploader" placeholder="Uploader">
+                    <textarea id="episode-links" placeholder="İzleme Linkleri (Her satıra bir link)" required></textarea>
+                    <button type="submit">Bölümü Kaydet ve Bildirim Gönder</button>
+                </form>
+            </section>
+
+            <section id="anime-detail-view" class="view hidden">
+                <button id="back-to-animes" class="back-button">← Animelere Geri Dön</button>
+                <div id="anime-detail-card" class="detail-card"></div>
+                <h3>Bölümler</h3>
+                <div id="anime-episodes-list" class="grid-container"></div>
+            </section>
+
+            <section id="requests-view" class="view hidden">
+                <h2>Kayıt İstekleri</h2>
+                <div id="requests-list"></div>
+            </section>
+        </main>
+    </div>
+    
+    <div id="custom-modal" class="custom-modal hidden">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <button id="modal-ok-button">Tamam</button>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
