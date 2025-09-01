@@ -10,8 +10,8 @@ const firebaseConfig = {
     measurementId: "G-BBLN91Q0TV"
 };
 
-// YENİ WEBHOOK URL'İNİZİ BURAYA YAPIŞTIRIN
-const DISCORD_WEBHOOK_URL = 'https://ptb.discord.com/api/webhooks/1412096309665468456/_qe6E0PERQDh2clVjXIltY3V1argJeCWdqyf6m00-U1vVn53fsGTHw1dm9tKFV6ePAnT';
+// YENİ VE GEÇERLİ DISCORD WEBHOOK URL'İNİZİ BURAYA YAPIŞTIRIN
+const DISCORD_WEBHOOK_URL = 'YENİ WEBHOOK URL BURAYA GELECEK';
 
 // Firebase ve Firestore'u başlat
 const app = firebase.initializeApp(firebaseConfig);
@@ -488,7 +488,6 @@ const sendDiscordNotification = async (animeData, episodeData) => {
     if (episodeData.encoder) {
         fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
     }
-    }
     if (episodeData.uploader) {
         fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
     }
@@ -714,6 +713,8 @@ elements.backToAnimesButton.addEventListener('click', () => {
 elements.loadMoreAnimesButton.addEventListener('click', () => {
     renderAnimes(true);
 });
+
+// onAuthStateChanged fonksiyonunun anonim fonksiyonu "async" olarak tanımlandı
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         showLoadingWithText('Yetki kontrolü yapılıyor...');
