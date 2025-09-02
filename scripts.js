@@ -18,7 +18,6 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = app.auth();
 const db = app.firestore();
 
-// --- DOM Elementleri ve Sabitler
 const elements = {
     authView: document.getElementById('auth-view'),
     mainApp: document.getElementById('main-app'),
@@ -231,7 +230,6 @@ const showAnimeDetail = async (animeId, animeData) => {
     const editBtn = elements.animeDetailCard.querySelector('.edit-button');
     const deleteBtn = elements.animeDetailCard.querySelector('.delete-button');
 
-    // Sadece admin ise butonları göster
     if (currentUser?.role !== 'admin') {
         editBtn.style.display = 'none';
         deleteBtn.style.display = 'none';
@@ -320,7 +318,6 @@ const createEpisodeCard = (episodeId, episodeData, animeData = null) => {
 };
 
 // --- Silme, Düzenleme ve Ekleme Fonksiyonları
-
 const deleteData = async (collection, id, animeId = null) => {
     showSpinner();
     try {
@@ -543,11 +540,10 @@ const sendDiscordNotification = async (animeData, episodeData) => {
             body: JSON.stringify(payload),
         });
 
-        // Yanıtın başarılı olup olmadığını kontrol et
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Discord Webhook hatası: ${response.status} - ${response.statusText}`, errorText);
-            throw new Error(`Discord'a bildirim gönderilemedi. Hata kodu: ${response.status}`);
+            showModal(`Discord'a bildirim gönderilemedi. Hata kodu: ${response.status}. Lütfen konsolu kontrol edin.`);
         }
     } catch (error) {
         console.error("Discord'a bildirim gönderilirken bir hata oluştu: ", error);
@@ -645,19 +641,16 @@ const rejectRequest = async (requestId, email) => {
 
 // --- Olay Dinleyicileri
 elements.modalOkButton.addEventListener('click', hideModal);
-
 elements.showRegisterBtn.addEventListener('click', (e) => {
     e.preventDefault();
     elements.loginFormCard.classList.add('hidden');
     elements.registerFormCard.classList.remove('hidden');
 });
-
 elements.showLoginBtn.addEventListener('click', (e) => {
     e.preventDefault();
     elements.registerFormCard.classList.add('hidden');
     elements.loginFormCard.classList.remove('hidden');
 });
-
 elements.loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -672,7 +665,6 @@ elements.loginForm.addEventListener('submit', async (e) => {
         hideSpinner();
     }
 });
-
 elements.registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('register-email').value;
@@ -714,7 +706,6 @@ elements.registerForm.addEventListener('submit', async (e) => {
         elements.registerForm.reset();
     }
 });
-
 elements.logoutButton.addEventListener('click', async () => {
     showSpinner();
     try {
@@ -752,16 +743,13 @@ elements.navItems.forEach(item => {
         }
     });
 });
-
 elements.backToAnimesButton.addEventListener('click', () => {
     showView('animes-view');
     renderAnimes();
 });
-
 elements.loadMoreAnimesButton.addEventListener('click', () => {
     renderAnimes(true);
 });
-
 elements.animeSearchInput.addEventListener('input', async (e) => {
     const query = e.target.value.trim().toLowerCase();
     if (query.length > 0) {
@@ -790,30 +778,25 @@ elements.animeSearchInput.addEventListener('input', async (e) => {
     }
 });
 
-// --- Yetkilendirme Kontrolü
+// onAuthStateChanged fonksiyonunun anonim fonksiyonu "async" olarak tanımlandı
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         showLoadingWithText('Yetki kontrolü yapılıyor...');
-        try {
-            const userDoc = await db.collection('users').doc(user.uid).get();
-            if (userDoc.exists) {
-                currentUser = { ...userDoc.data(), uid: user.uid };
-                elements.authView.classList.add('hidden');
-                elements.mainApp.classList.remove('hidden');
-                if (currentUser.role === 'admin') {
-                    elements.requestsNavItem.classList.remove('hidden');
-                } else {
-                    elements.requestsNavItem.classList.add('hidden');
-                }
-                renderAnimes();
-                showView('animes-view');
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+            currentUser = { ...userDoc.data(), uid: user.uid };
+            elements.authView.classList.add('hidden');
+            elements.mainApp.classList.remove('hidden');
+            if (currentUser.role === 'admin') {
+                elements.requestsNavItem.classList.remove('hidden');
             } else {
-                await auth.signOut();
-                showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
+                elements.requestsNavItem.classList.add('hidden');
             }
-        } catch (error) {
-            console.error("Kullanıcı verisi çekilirken hata oluştu: ", error);
-            showModal('Kullanıcı verisi çekilirken bir hata oluştu. Lütfen tekrar deneyin.');
+            renderAnimes();
+            showView('animes-view');
+        } else {
+            await auth.signOut();
+            showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
         }
     } else {
         currentUser = null;
