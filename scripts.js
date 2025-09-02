@@ -18,6 +18,7 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = app.auth();
 const db = app.firestore();
 
+// --- DOM Elementleri ve Sabitler
 const elements = {
     authView: document.getElementById('auth-view'),
     mainApp: document.getElementById('main-app'),
@@ -149,7 +150,6 @@ const renderCard = (id, data, collectionType) => {
 };
 
 // --- Veri Çekme ve Render Fonksiyonları
-
 const renderAnimes = async (loadMore = false) => {
     showSpinner();
     if (!loadMore) {
@@ -717,7 +717,6 @@ elements.logoutButton.addEventListener('click', async () => {
         hideSpinner();
     }
 });
-
 elements.navItems.forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
@@ -778,13 +777,13 @@ elements.animeSearchInput.addEventListener('input', async (e) => {
     }
 });
 
-// onAuthStateChanged fonksiyonunun anonim fonksiyonu "async" olarak tanımlandı
+// onAuthStateChanged fonksiyonu, kullanıcının rolüne göre menü öğelerini gösterir veya gizler.
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         showLoadingWithText('Yetki kontrolü yapılıyor...');
         const userDoc = await db.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
-            currentUser = { ...userDoc.data(), uid: user.uid };
+            currentUser = userDoc.data();
             elements.authView.classList.add('hidden');
             elements.mainApp.classList.remove('hidden');
             if (currentUser.role === 'admin') {
@@ -795,6 +794,7 @@ auth.onAuthStateChanged(async (user) => {
             renderAnimes();
             showView('animes-view');
         } else {
+            // Kullanıcı, auth sisteminde olmasına rağmen Firestore'da yoksa
             await auth.signOut();
             showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
         }
