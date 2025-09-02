@@ -18,6 +18,7 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = app.auth();
 const db = app.firestore();
 
+// --- DOM Elementleri ve Sabitler
 const elements = {
     authView: document.getElementById('auth-view'),
     mainApp: document.getElementById('main-app'),
@@ -49,6 +50,8 @@ const elements = {
     customModal: document.getElementById('custom-modal'),
     modalMessage: document.getElementById('modal-message'),
     modalOkButton: document.getElementById('modal-ok-button'),
+    // Arama
+    animeSearchInput: document.getElementById('anime-search-input')
 };
 
 const animeForm = {
@@ -78,7 +81,7 @@ let currentEditId = null;
 let lastVisibleAnime = null;
 let currentUser = null;
 
-// Custom modal gösteren fonksiyon
+// --- Yardımcı Fonksiyonlar
 const showModal = (message) => {
     elements.modalMessage.textContent = message;
     elements.customModal.classList.remove('hidden');
@@ -132,6 +135,22 @@ const getLinkHost = (url) => {
     }
 };
 
+const renderCard = (id, data, collectionType) => {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.innerHTML = `
+        <img src="${data.imageUrl}" alt="${data.name}" class="card-image">
+        <div class="card-content">
+            <h3 class="card-title">${data.name}</h3>
+            <p class="card-description">${data.description}</p>
+        </div>
+    `;
+    card.addEventListener('click', () => showAnimeDetail(id, data));
+    return card;
+};
+
+// --- Veri Çekme ve Render Fonksiyonları
+
 const renderAnimes = async (loadMore = false) => {
     showSpinner();
     if (!loadMore) {
@@ -151,16 +170,7 @@ const renderAnimes = async (loadMore = false) => {
         
         snapshot.forEach(doc => {
             const anime = doc.data();
-            const card = document.createElement('div');
-            card.classList.add('card');
-            card.innerHTML = `
-                <img src="${anime.imageUrl}" alt="${anime.name}" class="card-image">
-                <div class="card-content">
-                    <h3 class="card-title">${anime.name}</h3>
-                    <p class="card-description">${anime.description}</p>
-                </div>
-            `;
-            card.addEventListener('click', () => showAnimeDetail(doc.id, anime));
+            const card = renderCard(doc.id, anime, 'anime');
             elements.animesList.appendChild(card);
         });
 
@@ -172,6 +182,7 @@ const renderAnimes = async (loadMore = false) => {
         }
     } catch (error) {
         console.error("Animeler yüklenirken hata oluştu: ", error);
+        showModal("Animeler yüklenirken bir hata oluştu.");
     } finally {
         hideSpinner();
     }
@@ -193,6 +204,7 @@ const renderEpisodes = async () => {
         }
     } catch (error) {
         console.error("Bölümler yüklenirken hata oluştu: ", error);
+        showModal("Bölümler yüklenirken bir hata oluştu.");
     } finally {
         hideSpinner();
     }
@@ -216,19 +228,27 @@ const showAnimeDetail = async (animeId, animeData) => {
         </div>
     `;
     
-    elements.animeDetailCard.querySelector('.edit-button').addEventListener('click', (e) => {
-        e.stopPropagation();
-        editData('animes', animeId, animeData);
-    });
-    
-    elements.animeDetailCard.querySelector('.delete-button').addEventListener('click', (e) => {
-        e.stopPropagation();
-        showModal('Bu animeyi ve tüm bölümlerini silmek istediğinize emin misiniz?');
-        elements.modalOkButton.onclick = () => {
-            hideModal();
-            deleteAnimeAndEpisodes(animeId);
-        };
-    });
+    const editBtn = elements.animeDetailCard.querySelector('.edit-button');
+    const deleteBtn = elements.animeDetailCard.querySelector('.delete-button');
+
+    // Sadece admin ise butonları göster
+    if (currentUser?.role !== 'admin') {
+        editBtn.style.display = 'none';
+        deleteBtn.style.display = 'none';
+    } else {
+        editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            editData('animes', animeId, animeData);
+        });
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showModal('Bu animeyi ve tüm bölümlerini silmek istediğinize emin misiniz?');
+            elements.modalOkButton.onclick = () => {
+                hideModal();
+                deleteAnimeAndEpisodes(animeId);
+            };
+        });
+    }
 
     elements.animeEpisodesList.innerHTML = '';
     try {
@@ -244,6 +264,7 @@ const showAnimeDetail = async (animeId, animeData) => {
         });
     } catch (error) {
         console.error("Anime bölümleri yüklenirken hata oluştu: ", error);
+        showModal("Anime bölümleri yüklenirken bir hata oluştu.");
     } finally {
         hideSpinner();
     }
@@ -274,22 +295,31 @@ const createEpisodeCard = (episodeId, episodeData, animeData = null) => {
         </button>
     `;
 
-    card.querySelector('.edit-button').addEventListener('click', (e) => {
-        e.stopPropagation();
-        editData('episodes', episodeId, episodeData);
-    });
+    const editBtn = card.querySelector('.edit-button');
+    const deleteBtn = card.querySelector('.delete-button');
 
-    card.querySelector('.delete-button').addEventListener('click', (e) => {
-        e.stopPropagation();
-        showModal('Bu bölümü silmek istediğinize emin misiniz?');
-        elements.modalOkButton.onclick = () => {
-            hideModal();
-            deleteData('episodes', episodeId, episodeData.animeId);
-        };
-    });
+    if (currentUser?.role !== 'admin') {
+        editBtn.style.display = 'none';
+        deleteBtn.style.display = 'none';
+    } else {
+        editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            editData('episodes', episodeId, episodeData);
+        });
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showModal('Bu bölümü silmek istediğinize emin misiniz?');
+            elements.modalOkButton.onclick = () => {
+                hideModal();
+                deleteData('episodes', episodeId, episodeData.animeId);
+            };
+        });
+    }
 
     return card;
 };
+
+// --- Silme, Düzenleme ve Ekleme Fonksiyonları
 
 const deleteData = async (collection, id, animeId = null) => {
     showSpinner();
@@ -544,6 +574,10 @@ const renderRequests = async () => {
     elements.requestsList.innerHTML = '';
     try {
         const snapshot = await db.collection('registrationRequests').where('status', '==', 'pending').get();
+        if (snapshot.empty) {
+            elements.requestsList.innerHTML = '<p class="text-center">Bekleyen kayıt isteği bulunmamaktadır.</p>';
+            return;
+        }
         snapshot.forEach(doc => {
             const request = doc.data();
             const card = document.createElement('div');
@@ -564,6 +598,7 @@ const renderRequests = async () => {
         });
     } catch (error) {
         console.error("Kayıt istekleri yüklenirken hata oluştu: ", error);
+        showModal("Kayıt istekleri yüklenirken bir hata oluştu.");
     } finally {
         hideSpinner();
     }
@@ -598,148 +633,3 @@ const rejectRequest = async (requestId, email) => {
         renderRequests();
     } catch (error) {
         console.error("Kayıt isteği reddedilirken hata oluştu: ", error);
-        showModal("Kayıt isteği reddedilirken bir hata oluştu.");
-    } finally {
-        hideSpinner();
-    }
-};
-
-elements.modalOkButton.addEventListener('click', hideModal);
-elements.showRegisterBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    elements.loginFormCard.classList.add('hidden');
-    elements.registerFormCard.classList.remove('hidden');
-});
-elements.showLoginBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    elements.registerFormCard.classList.add('hidden');
-    elements.loginFormCard.classList.remove('hidden');
-});
-elements.loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    showSpinner();
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-    } catch (error) {
-        console.error("Giriş işlemi başarısız: ", error);
-        showModal('Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.');
-    } finally {
-        hideSpinner();
-    }
-});
-elements.registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
-    const repeatPassword = document.getElementById('register-password-repeat').value;
-    const discordName = document.getElementById('register-discord-name').value;
-    if (password !== repeatPassword) {
-        showModal('Şifreler eşleşmiyor.');
-        return;
-    }
-    showSpinner();
-    try {
-        const existingRequest = await db.collection('registrationRequests').where('email', '==', email).get();
-        if (!existingRequest.empty) {
-            showModal('Bu e-posta adresi için zaten bir kayıt isteği bulunmaktadır.');
-            hideSpinner();
-            return;
-        }
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        await db.collection('registrationRequests').doc(user.uid).set({
-            uid: user.uid,
-            email: email,
-            discordName: discordName,
-            status: 'pending',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        await auth.signOut();
-        showModal('Kayıt isteğiniz başarıyla gönderildi. Yönetici onayı bekleniyor.');
-    } catch (error) {
-        console.error("Kayıt işlemi başarısız: ", error);
-        if (error.code === 'auth/email-already-in-use') {
-            showModal('Bu e-posta adresi zaten kullanılıyor. Lütfen farklı bir e-posta kullanın.');
-        } else {
-            showModal(`Kayıt sırasında bir hata oluştu: ${error.message}`);
-        }
-    } finally {
-        hideSpinner();
-        elements.registerForm.reset();
-    }
-});
-elements.logoutButton.addEventListener('click', async () => {
-    showSpinner();
-    try {
-        await auth.signOut();
-    } catch (error) {
-        console.error("Çıkış işlemi başarısız: ", error);
-        showModal('Çıkış işlemi sırasında bir hata oluştu.');
-    } finally {
-        hideSpinner();
-    }
-});
-elements.navItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const viewId = item.dataset.view;
-        showView(viewId);
-        if (viewId === 'animes-view') {
-            renderAnimes();
-        } else if (viewId === 'episodes-view') {
-            renderEpisodes();
-        } else if (viewId === 'create-episode-view') {
-            populateAnimeSelect();
-            isEditing = false;
-            currentEditId = null;
-            elements.createEpisodeForm.reset();
-            episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
-        } else if (viewId === 'create-anime-view') {
-            isEditing = false;
-            currentEditId = null;
-            elements.createAnimeForm.reset();
-            animeForm.submitBtn.textContent = 'Animeyi Kaydet';
-        } else if (viewId === 'requests-view') {
-            renderRequests();
-        }
-    });
-});
-elements.backToAnimesButton.addEventListener('click', () => {
-    showView('animes-view');
-    renderAnimes();
-});
-elements.loadMoreAnimesButton.addEventListener('click', () => {
-    renderAnimes(true);
-});
-
-// onAuthStateChanged fonksiyonunun anonim fonksiyonu "async" olarak tanımlandı
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        showLoadingWithText('Yetki kontrolü yapılıyor...');
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-            currentUser = { ...userDoc.data(), uid: user.uid };
-            elements.authView.classList.add('hidden');
-            elements.mainApp.classList.remove('hidden');
-            if (currentUser.role === 'admin') {
-                elements.requestsNavItem.classList.remove('hidden');
-            } else {
-                elements.requestsNavItem.classList.add('hidden');
-            }
-            renderAnimes();
-            showView('animes-view');
-        } else {
-            await auth.signOut();
-            showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
-        }
-    } else {
-        currentUser = null;
-        elements.mainApp.classList.add('hidden');
-        elements.authView.classList.remove('hidden');
-        elements.loginFormCard.classList.remove('hidden');
-        elements.registerFormCard.classList.add('hidden');
-    }
-    hideSpinner();
-});
