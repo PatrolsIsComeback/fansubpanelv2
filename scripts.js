@@ -26,7 +26,7 @@ const elements = {
     views: document.querySelectorAll('.view'),
     navItems: document.querySelectorAll('.nav-item'),
     loadingSpinner: document.getElementById('loading-spinner'),
-    loadingText: document.querySelector('.loading-text'), // Yeni eklenen
+    loadingText: document.querySelector('.loading-text'),
     animesList: document.getElementById('animes-list'),
     episodesList: document.getElementById('episodes-list'),
     animeSelect: document.getElementById('episode-anime-select'),
@@ -735,8 +735,11 @@ elements.loadMoreAnimesButton.addEventListener('click', () => {
 
 // onAuthStateChanged fonksiyonunun anonim fonksiyonu "async" olarak tanımlandı
 auth.onAuthStateChanged(async (user) => {
+    // Uygulama açılır açılmaz, yetki kontrolü yapılırken spinner'ı göster
+    showSpinner('Oturum kontrol ediliyor...');
+
     if (user) {
-        showSpinner('Yetki kontrolü yapılıyor...');
+        // Kullanıcı giriş yapmışsa, veritabanından yetkisini kontrol et
         try {
             const userDoc = await db.collection('users').doc(user.uid).get();
             if (userDoc.exists) {
@@ -751,6 +754,7 @@ auth.onAuthStateChanged(async (user) => {
                 renderAnimes();
                 showView('animes-view');
             } else {
+                // Kullanıcı Firebase'e kayıtlı ancak yetkisi yoksa, oturumu kapat
                 await auth.signOut();
                 showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
             }
@@ -760,11 +764,14 @@ auth.onAuthStateChanged(async (user) => {
             await auth.signOut();
         }
     } else {
+        // Kullanıcı giriş yapmamışsa, giriş ekranını göster
         currentUser = null;
         elements.mainApp.classList.add('hidden');
         elements.authView.classList.remove('hidden');
         elements.loginFormCard.classList.remove('hidden');
         elements.registerFormCard.classList.add('hidden');
     }
+    
+    // İşlem tamamlandığında spinner'ı gizle
     hideSpinner();
 });
