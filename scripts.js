@@ -10,6 +10,9 @@ const firebaseConfig = {
     measurementId: "G-BBLN91Q0TV"
 };
 
+// YENİ VE GEÇERLİ DISCORD WEBHOOK URL'İNİZİ BURAYA YAPIŞTIRIN
+// 'ptb.discord.com' yerine 'discord.com' kullanarak daha kararlı bir URL elde edildi.
+
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1412502625534087238/KKe5swSsdna6057TD3nK0bhfCh1T1mzSkO1ELW7DMvHC0ZjWE04gz6Ckhza2W1_TEw2v';
 
 // Firebase ve Firestore'u başlat
@@ -23,8 +26,8 @@ const elements = {
     mainApp: document.getElementById('main-app'),
     views: document.querySelectorAll('.view'),
     navItems: document.querySelectorAll('.nav-item'),
-    loadingOverlay: document.getElementById('loading-overlay'), // loading-spinner yerine yeni overlay
-    loadingText: document.getElementById('loading-text'),
+    loadingSpinner: document.getElementById('loading-spinner'),
+    loadingText: document.querySelector('.loading-text'),
     animesList: document.getElementById('animes-list'),
     episodesList: document.getElementById('episodes-list'),
     animeSelect: document.getElementById('episode-anime-select'),
@@ -78,10 +81,9 @@ let lastVisibleAnime = null;
 let currentUser = null;
 
 // Özel modalı gösteren fonksiyon
-const showModal = (message, onOk = hideModal) => {
+const showModal = (message) => {
     elements.modalMessage.textContent = message;
     elements.customModal.classList.remove('hidden');
-    elements.modalOkButton.onclick = onOk;
 };
 
 const hideModal = () => {
@@ -91,10 +93,12 @@ const hideModal = () => {
 // Belirli bir görünümü (view) aktif hale getirir
 const showView = (id) => {
     elements.views.forEach(view => {
+        view.classList.add('hidden');
         view.classList.remove('active');
     });
     const activeView = document.getElementById(id);
     if (activeView) {
+        activeView.classList.remove('hidden');
         activeView.classList.add('active');
     }
 
@@ -108,12 +112,12 @@ const showView = (id) => {
 // Yükleme animasyonunu ve metnini gösterir
 const showSpinner = (text = 'Veriler yükleniyor...') => {
     elements.loadingText.textContent = text;
-    elements.loadingOverlay.classList.remove('hidden');
+    elements.loadingSpinner.classList.remove('hidden');
 };
 
 // Yükleme animasyonunu gizler
 const hideSpinner = () => {
-    elements.loadingOverlay.classList.add('hidden');
+    elements.loadingSpinner.classList.add('hidden');
 };
 
 // Linkin ana host adını alır (örneğin: 'drive.google.com' -> 'Google')
@@ -148,24 +152,20 @@ const renderAnimes = async (loadMore = false) => {
         const snapshot = await query.get();
         const lastDoc = snapshot.docs[snapshot.docs.length - 1];
         
-        if (snapshot.docs.length === 0 && !loadMore) {
-            elements.animesList.innerHTML = '<p class="text-center text-gray-500">Henüz hiç anime eklenmemiş.</p>';
-        } else {
-            snapshot.forEach(doc => {
-                const anime = doc.data();
-                const card = document.createElement('div');
-                card.classList.add('card');
-                card.innerHTML = `
-                    <img src="${anime.imageUrl}" alt="${anime.name}" class="card-image">
-                    <div class="card-content">
-                        <h3 class="card-title">${anime.name}</h3>
-                        <p class="card-description">${anime.description}</p>
-                    </div>
-                `;
-                card.addEventListener('click', () => showAnimeDetail(doc.id, anime));
-                elements.animesList.appendChild(card);
-            });
-        }
+        snapshot.forEach(doc => {
+            const anime = doc.data();
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.innerHTML = `
+                <img src="${anime.imageUrl}" alt="${anime.name}" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">${anime.name}</h3>
+                    <p class="card-description">${anime.description}</p>
+                </div>
+            `;
+            card.addEventListener('click', () => showAnimeDetail(doc.id, anime));
+            elements.animesList.appendChild(card);
+        });
 
         if (lastDoc) {
             lastVisibleAnime = lastDoc;
@@ -186,17 +186,13 @@ const renderEpisodes = async () => {
     elements.episodesList.innerHTML = '';
     try {
         const snapshot = await db.collection('episodes').orderBy('createdAt', 'desc').get();
-        if (snapshot.empty) {
-            elements.episodesList.innerHTML = '<p class="text-center text-gray-500">Henüz hiç bölüm eklenmemiş.</p>';
-        } else {
-            for (const doc of snapshot.docs) {
-                const episode = doc.data();
-                const animeDoc = await db.collection('animes').doc(episode.animeId).get();
-                if (animeDoc.exists) {
-                    const anime = animeDoc.data();
-                    const card = createEpisodeCard(doc.id, episode, anime);
-                    elements.episodesList.appendChild(card);
-                }
+        for (const doc of snapshot.docs) {
+            const episode = doc.data();
+            const animeDoc = await db.collection('animes').doc(episode.animeId).get();
+            if (animeDoc.exists) {
+                const anime = animeDoc.data();
+                const card = createEpisodeCard(doc.id, episode, anime);
+                elements.episodesList.appendChild(card);
             }
         }
     } catch (error) {
@@ -216,40 +212,27 @@ const showAnimeDetail = async (animeId, animeData) => {
             <p class="detail-description">${animeData.description}</p>
             ${animeData.imdbUrl ? `<p class="info-item"><b>IMDb:</b> <a href="${animeData.imdbUrl}" target="_blank">${animeData.imdbUrl}</a></p>` : ''}
             ${animeData.genres && animeData.genres.length > 0 ? `<p class="info-item"><b>Türler:</b> ${animeData.genres.join(', ')}</p>` : ''}
-            <div class="detail-actions">
-                <button class="edit-button" data-id="${animeId}" data-type="anime">
-                    <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
-                </button>
-                <button class="delete-button" data-id="${animeId}" data-type="anime">
-                    <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
-                </button>
-            </div>
+            <button class="edit-button" data-id="${animeId}" data-type="anime">
+                <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
+            </button>
+            <button class="delete-button" data-id="${animeId}" data-type="anime">
+                <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
+            </button>
         </div>
     `;
     
-    // Yalnızca admin yetkisi olan kullanıcılar için düzenle/sil butonları görünür olsun
-    const editBtn = elements.animeDetailCard.querySelector('.edit-button');
-    const deleteBtn = elements.animeDetailCard.querySelector('.delete-button');
-
-    if (currentUser?.role === 'admin') {
-        editBtn.style.display = 'block';
-        deleteBtn.style.display = 'block';
-    } else {
-        editBtn.style.display = 'none';
-        deleteBtn.style.display = 'none';
-    }
-
-    editBtn.addEventListener('click', (e) => {
+    elements.animeDetailCard.querySelector('.edit-button').addEventListener('click', (e) => {
         e.stopPropagation();
         editData('animes', animeId, animeData);
     });
     
-    deleteBtn.addEventListener('click', (e) => {
+    elements.animeDetailCard.querySelector('.delete-button').addEventListener('click', (e) => {
         e.stopPropagation();
-        showModal('Bu animeyi ve tüm bölümlerini silmek istediğinize emin misiniz?', () => {
+        showModal('Bu animeyi ve tüm bölümlerini silmek istediğinize emin misiniz?');
+        elements.modalOkButton.onclick = () => {
             hideModal();
             deleteAnimeAndEpisodes(animeId);
-        });
+        };
     });
 
     elements.animeEpisodesList.innerHTML = '';
@@ -259,15 +242,11 @@ const showAnimeDetail = async (animeId, animeData) => {
             .orderBy('number', 'asc')
             .get();
 
-        if (snapshot.empty) {
-            elements.animeEpisodesList.innerHTML = '<p class="text-center text-gray-500">Henüz bu animeye ait bölüm eklenmemiş.</p>';
-        } else {
-            snapshot.forEach(doc => {
-                const episode = doc.data();
-                const card = createEpisodeCard(doc.id, episode);
-                elements.animeEpisodesList.appendChild(card);
-            });
-        }
+        snapshot.forEach(doc => {
+            const episode = doc.data();
+            const card = createEpisodeCard(doc.id, episode);
+            elements.animeEpisodesList.appendChild(card);
+        });
     } catch (error) {
         console.error("Anime bölümleri yüklenirken hata oluştu: ", error);
         showModal('Bölümler yüklenirken bir sorun oluştu.');
@@ -303,29 +282,18 @@ const createEpisodeCard = (episodeId, episodeData, animeData = null) => {
         </div>
     `;
 
-    // Yalnızca admin yetkisi olan kullanıcılar için düzenle/sil butonları görünür olsun
-    const editBtn = card.querySelector('.edit-button');
-    const deleteBtn = card.querySelector('.delete-button');
-    
-    if (currentUser?.role === 'admin') {
-        editBtn.style.display = 'block';
-        deleteBtn.style.display = 'block';
-    } else {
-        editBtn.style.display = 'none';
-        deleteBtn.style.display = 'none';
-    }
-
-    editBtn.addEventListener('click', (e) => {
+    card.querySelector('.edit-button').addEventListener('click', (e) => {
         e.stopPropagation();
         editData('episodes', episodeId, episodeData);
     });
 
-    deleteBtn.addEventListener('click', (e) => {
+    card.querySelector('.delete-button').addEventListener('click', (e) => {
         e.stopPropagation();
-        showModal('Bu bölümü silmek istediğinize emin misiniz?', () => {
+        showModal('Bu bölümü silmek istediğinize emin misiniz?');
+        elements.modalOkButton.onclick = () => {
             hideModal();
             deleteData('episodes', episodeId, episodeData.animeId);
-        });
+        };
     });
 
     return card;
@@ -344,9 +312,6 @@ const deleteData = async (collection, id, animeId = null) => {
                 const animeDoc = await db.collection('animes').doc(animeId).get();
                 if (animeDoc.exists) {
                     showAnimeDetail(animeId, animeDoc.data());
-                } else {
-                    renderAnimes(); // Anime silinmişse anime listesine dön
-                    showView('animes-view');
                 }
             } else {
                 renderEpisodes();
@@ -382,7 +347,7 @@ const deleteAnimeAndEpisodes = async (animeId) => {
     }
 };
 
-const editData = async (collection, id, data) => {
+const editData = (collection, id, data) => {
     isEditing = true;
     currentEditId = id;
     
@@ -396,7 +361,7 @@ const editData = async (collection, id, data) => {
         animeForm.submitBtn.textContent = 'Animeyi Güncelle';
     } else if (collection === 'episodes') {
         showView('create-episode-view');
-        await populateAnimeSelect(data.animeId);
+        populateAnimeSelect(data.animeId);
         episodeForm.season.value = data.season || '';
         episodeForm.number.value = data.number;
         episodeForm.duration.value = data.duration || '';
@@ -407,8 +372,6 @@ const editData = async (collection, id, data) => {
         episodeForm.links.value = data.links.join('\n');
         episodeForm.submitBtn.textContent = 'Bölümü Güncelle';
     }
-    // Formun en üstüne kaydır
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 elements.createAnimeForm.addEventListener('submit', async (e) => {
@@ -469,12 +432,6 @@ elements.createEpisodeForm.addEventListener('submit', async (e) => {
     const uploader = episodeForm.uploader.value;
     const links = episodeForm.links.value.split('\n').filter(link => link.trim() !== '');
     
-    if (!animeId) {
-        showModal('Lütfen bir anime seçin.');
-        hideSpinner();
-        return;
-    }
-
     if (!isEditing) {
         const existingEpisode = await db.collection('episodes')
             .where('animeId', '==', animeId)
@@ -530,13 +487,19 @@ const sendDiscordNotification = async (animeData, episodeData) => {
         { name: "Sezon", value: `${episodeData.season}`, inline: true },
         { name: "Bölüm No", value: `${episodeData.number}`, inline: true },
     ];
-    if (episodeData.duration) fields.push({ name: "Bölüm Süresi", value: episodeData.duration, inline: true });
-    if (episodeData.translator) fields.push({ name: "Çevirmen", value: episodeData.translator, inline: true });
-    if (episodeData.encoder) fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
-    if (episodeData.uploader) fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
-    
-    const linksText = episodeData.links.map(link => `[${getLinkHost(link)}](${link})`).join('\n') || "Belirtilmemiş";
-    fields.push({ name: "İzleme Linkleri", value: linksText });
+    if (episodeData.duration) {
+        fields.push({ name: "Bölüm Süresi", value: episodeData.duration, inline: true });
+    }
+    if (episodeData.translator) {
+        fields.push({ name: "Çevirmen", value: episodeData.translator, inline: true });
+    }
+    if (episodeData.encoder) {
+        fields.push({ name: "Encoder", value: episodeData.encoder, inline: true });
+    }
+    if (episodeData.uploader) {
+        fields.push({ name: "Uploader", value: episodeData.uploader, inline: true });
+    }
+    fields.push({ name: "İzleme Linkleri", value: episodeData.links.map(link => `[${getLinkHost(link)}](${link})`).join('\n') || "Belirtilmemiş" });
 
     const payload = {
         embeds: [{
@@ -544,7 +507,9 @@ const sendDiscordNotification = async (animeData, episodeData) => {
             description: `Yeni bölüm yayında!`,
             color: 638681, 
             fields: fields,
-            thumbnail: { url: animeData.imageUrl },
+            thumbnail: {
+                url: animeData.imageUrl
+            },
             timestamp: new Date().toISOString()
         }]
     };
@@ -771,9 +736,11 @@ elements.loadMoreAnimesButton.addEventListener('click', () => {
 
 // onAuthStateChanged fonksiyonunun anonim fonksiyonu "async" olarak tanımlandı
 auth.onAuthStateChanged(async (user) => {
+    // Uygulama açılır açılmaz, yetki kontrolü yapılırken spinner'ı göster
     showSpinner('Oturum kontrol ediliyor...');
 
     if (user) {
+        // Kullanıcı giriş yapmışsa, veritabanından yetkisini kontrol et
         try {
             const userDoc = await db.collection('users').doc(user.uid).get();
             if (userDoc.exists) {
@@ -788,6 +755,7 @@ auth.onAuthStateChanged(async (user) => {
                 renderAnimes();
                 showView('animes-view');
             } else {
+                // Kullanıcı Firebase'e kayıtlı ancak yetkisi yoksa, oturumu kapat
                 await auth.signOut();
                 showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
             }
@@ -797,6 +765,7 @@ auth.onAuthStateChanged(async (user) => {
             await auth.signOut();
         }
     } else {
+        // Kullanıcı giriş yapmamışsa, giriş ekranını göster
         currentUser = null;
         elements.mainApp.classList.add('hidden');
         elements.authView.classList.remove('hidden');
@@ -804,5 +773,6 @@ auth.onAuthStateChanged(async (user) => {
         elements.registerFormCard.classList.add('hidden');
     }
     
+    // İşlem tamamlandığında spinner'ı gizle
     hideSpinner();
 });
