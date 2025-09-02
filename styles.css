@@ -21,7 +21,8 @@
     --transition-speed: 0.3s;
 } 
 
-/* * Temel Sayfa Düzeni ve Font Ayarları
+/*
+ * Temel Sayfa Düzeni ve Font Ayarları
  * Düzen: Daha pürüzsüz kaydırma, varsayılan kutu boyutlandırma.
  */
 *, *::before, *::after {
@@ -425,7 +426,7 @@ button[type="submit"]:active {
 
 /*
  * Yükleme Ekranı ve Spinner
- * Geliştirme: Tam ekran, merkezi ve dinamik yükleme animasyonu.
+ * Geliştirme: Daha dinamik ve tam ekran yükleme animasyonu.
  */
 .loading-overlay { 
     position: fixed; 
@@ -591,3 +592,222 @@ button[type="submit"]:active {
     padding: 10px 20px;
     background-color: var(--button-bg);
     color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/*
+ * Kayıt İstekleri Stilleri
+ */
+#requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.request-card {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.request-info {
+    flex-grow: 1;
+}
+
+.request-info h4 {
+    margin: 0 0 5px;
+}
+
+.request-buttons button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    margin-left: 10px;
+    transition: background-color var(--transition-speed);
+}
+
+.request-buttons .accept-btn {
+    background-color: var(--success-color);
+    color: #fff;
+}
+
+.request-buttons .accept-btn:hover {
+    background-color: #45a049;
+}
+
+.request-buttons .reject-btn {
+    background-color: var(--error-color);
+    color: #fff;
+}
+
+.request-buttons .reject-btn:hover {
+    background-color: #d32f2f;
+}
+
+/*
+ * Yükleme Daha Fazla Butonu
+ */
+.load-more-container { 
+    text-align: center; 
+    margin-top: 20px; 
+} 
+
+.load-more-button { 
+    padding: 12px 25px; 
+    background-color: var(--primary-color); 
+    color: #fff; 
+    border: none; 
+    border-radius: 8px; 
+    font-size: 1rem; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: background-color var(--transition-speed), transform 0.1s; 
+} 
+
+.load-more-button:hover { 
+    background-color: var(--button-hover); 
+} 
+
+.load-more-button:active {
+    transform: translateY(1px);
+}
+
+/*
+ * Görünürlük Yardımcı Sınıflar
+ */
+.hidden { 
+    display: none !important; 
+} 
+
+/*
+ * Responsive Düzenlemeler
+ * Geliştirme: Daha iyi mobil deneyim için düzen.
+ */
+@media (max-width: 1024px) {
+    /* Tablet ve küçük masaüstü cihazlar için genel ayarlar */
+    .sidebar {
+        width: 200px;
+    }
+
+    .content {
+        margin-left: 200px;
+    }
+    
+    .detail-card {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .detail-image {
+        width: 100%;
+        max-width: 250px;
+        height: auto;
+    }
+
+    .detail-title {
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    .detail-description {
+        text-align: justify;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Telefonlar için ana düzen değişiklikleri */
+    body {
+        /* Mobil cihazlarda scroll'u daha akıcı yapar */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: fixed; /* En altta sabit kalması için */
+        bottom: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+        z-index: 200;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+        background-color: var(--card-background); /* Menünün arka planını belirginleştirir */
+        transform: translateY(0);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .sidebar .logo {
+        display: none; /* Mobil menüde logo gereksiz */
+    }
+    
+    .nav {
+        flex-direction: row;
+        flex-grow: 1;
+        justify-content: space-around;
+        gap: 0;
+    }
+    
+    .nav-item {
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 5px;
+        font-size: 0.8rem;
+        flex-grow: 1;
+    }
+
+    .nav-item span {
+        margin-top: 5px;
+        margin-left: 0;
+        text-align: center;
+    }
+
+    .nav-icon {
+        margin-right: 0;
+    }
+
+    .content {
+        margin-left: 0;
+        padding: 20px;
+        padding-bottom: 80px; /* Alttaki sabit menü için boşluk */
+    }
+
+    .detail-card {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .detail-image {
+        width: 100%;
+        height: auto;
+        max-width: 300px;
+    }
+
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .form-card, .auth-form-card {
+        padding: 20px;
+    }
+
+    /* Episode kartındaki butonların mobil görünümü */
+    .episode-card .edit-button,
+    .episode-card .
