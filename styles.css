@@ -692,6 +692,142 @@ button[type="submit"]:active {
         flex-direction: column;
     }
 
+    /*
+ * Ekran Genişliğine Göre Ek Ayarlamalar
+ * Telefon ve Tabletler için daha iyi bir deneyim sunar.
+ */
+@media (max-width: 1024px) {
+    /* Tablet ve küçük masaüstü cihazlar için genel ayarlar */
+    .sidebar {
+        width: 200px;
+    }
+
+    .content {
+        margin-left: 200px;
+    }
+    
+    .detail-card {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .detail-image {
+        width: 100%;
+        max-width: 250px;
+        height: auto;
+    }
+
+    .detail-title {
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    .detail-description {
+        text-align: justify;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Telefonlar için ana düzen değişiklikleri */
+    body {
+        /* Mobil cihazlarda scroll'u daha akıcı yapar */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: fixed; /* En altta sabit kalması için */
+        bottom: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+        z-index: 200;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+        background-color: var(--card-background); /* Menünün arka planını belirginleştirir */
+        transform: translateY(0);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .sidebar .logo {
+        display: none; /* Mobil menüde logo gereksiz */
+    }
+    
+    .nav {
+        flex-direction: row;
+        flex-grow: 1;
+        justify-content: space-around;
+        gap: 0;
+    }
+    
+    .nav-item {
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 5px;
+        font-size: 0.8rem;
+    }
+
+    .nav-item span {
+        margin-top: 5px;
+        margin-left: 0;
+        text-align: center;
+    }
+
+    .nav-icon {
+        margin-right: 0;
+    }
+
+    .content {
+        margin-left: 0;
+        padding: 20px;
+        padding-bottom: 80px; /* Alttaki sabit menü için boşluk */
+    }
+
+    .detail-card {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .detail-image {
+        width: 100%;
+        height: auto;
+        max-width: 300px;
+    }
+
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .form-card, .auth-form-card {
+        padding: 20px;
+    }
+
+    .episode-card .edit-button,
+    .episode-card .delete-button {
+        position: static;
+        margin-left: auto;
+    }
+
+    .episode-card .delete-button {
+        margin-right: 5px;
+    }
+}
+
+
+    
     .sidebar {
         width: 100%;
         height: auto;
