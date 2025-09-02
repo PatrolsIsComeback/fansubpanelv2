@@ -513,19 +513,20 @@ button[type="submit"]:hover {
     color: #fff;
 }
 
+
 /* Yükleme Ekranı ve Spinner */
 .loading-container {
-    position: fixed;
+    position: fixed; /* Ekranın her zaman en üstünde kalmasını sağlar */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--background-color-darker);
+    background-color: var(--background-color-darker); /* Koyu arka plan rengi */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 1000; /* Diğer tüm elemanların üzerinde olmasını sağlar */
     transition: opacity 0.3s ease-in-out;
 }
 
@@ -534,6 +535,7 @@ button[type="submit"]:hover {
     visibility: hidden;
 }
 
+/* Spinner'ın kendisi */
 .loading-spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
     border-top: 4px solid var(--primary-color);
@@ -543,17 +545,18 @@ button[type="submit"]:hover {
     animation: spin 1s linear infinite;
 }
 
+/* Yükleme Metni */
 .loading-text {
     margin-top: 20px;
     color: #fff;
     font-size: 1.2rem;
 }
 
+/* Dönme animasyonu */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-
 
 
 
