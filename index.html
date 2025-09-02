@@ -11,7 +11,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div id="auth-view" class="auth-container">
+
+    <div id="loading-spinner" class="loading-container hidden">
+        <div class="loading-spinner"></div>
+        <p class="loading-text"></p>
+    </div>
+
+    <div id="auth-view" class="auth-container hidden">
         <div id="login-form-card" class="auth-form-card">
             <h2 class="form-title">Giriş Yap</h2>
             <form id="login-form" class="auth-form">
@@ -66,11 +72,6 @@
         </aside>
 
         <main class="content">
-            <div id="loading-spinner" class="spinner-container hidden">
-                <div class="spinner"></div>
-                <p class="loading-text"></p>
-            </div>
-            
             <section id="animes-view" class="view active">
                 <h2>Animeler</h2>
                 <div id="animes-list" class="grid-container"></div>
