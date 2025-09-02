@@ -11,19 +11,22 @@ const firebaseConfig = {
 };
 
 // YENİ VE GEÇERLİ DISCORD WEBHOOK URL'İNİZİ BURAYA YAPIŞTIRIN
-const DISCORD_WEBHOOK_URL = 'https://ptb.discord.com/api/webhooks/1412096309665468456/_qe6E0PERQDh2clVjXIltY3V1argJeCWdqyf6m00-U1vVn53fsGTHw1dm9tKFV6ePAnT';
+// 'ptb.discord.com' yerine 'discord.com' kullanarak daha kararlı bir URL elde edildi.
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1412096309665468456/_qe6E0PERQDh2clVjXIltY3V1argJeCWdqyf6m00-U1vVn53fsGTHw1dm9tKFV6ePAnT';
 
 // Firebase ve Firestore'u başlat
 const app = firebase.initializeApp(firebaseConfig);
 const auth = app.auth();
 const db = app.firestore();
 
+// Tüm DOM elemanlarını tek bir nesnede toplamak daha düzenlidir.
 const elements = {
     authView: document.getElementById('auth-view'),
     mainApp: document.getElementById('main-app'),
     views: document.querySelectorAll('.view'),
     navItems: document.querySelectorAll('.nav-item'),
     loadingSpinner: document.getElementById('loading-spinner'),
+    loadingText: document.querySelector('.loading-text'), // Yeni eklenen
     animesList: document.getElementById('animes-list'),
     episodesList: document.getElementById('episodes-list'),
     animeSelect: document.getElementById('episode-anime-select'),
@@ -34,7 +37,6 @@ const elements = {
     animeEpisodesList: document.getElementById('anime-episodes-list'),
     backToAnimesButton: document.getElementById('back-to-animes'),
     loadMoreAnimesButton: document.getElementById('load-more-animes'),
-    // Auth Elemanları
     loginForm: document.getElementById('login-form'),
     registerForm: document.getElementById('register-form'),
     showRegisterBtn: document.getElementById('show-register'),
@@ -45,7 +47,6 @@ const elements = {
     requestsView: document.getElementById('requests-view'),
     requestsList: document.getElementById('requests-list'),
     requestsNavItem: document.getElementById('requests-nav-item'),
-    // Custom Modal
     customModal: document.getElementById('custom-modal'),
     modalMessage: document.getElementById('modal-message'),
     modalOkButton: document.getElementById('modal-ok-button'),
@@ -78,7 +79,7 @@ let currentEditId = null;
 let lastVisibleAnime = null;
 let currentUser = null;
 
-// Custom modal gösteren fonksiyon
+// Özel modalı gösteren fonksiyon
 const showModal = (message) => {
     elements.modalMessage.textContent = message;
     elements.customModal.classList.remove('hidden');
@@ -88,6 +89,7 @@ const hideModal = () => {
     elements.customModal.classList.add('hidden');
 };
 
+// Belirli bir görünümü (view) aktif hale getirir
 const showView = (id) => {
     elements.views.forEach(view => {
         view.classList.add('hidden');
@@ -106,25 +108,25 @@ const showView = (id) => {
     }
 };
 
-const showSpinner = () => {
+// Yükleme animasyonunu ve metnini gösterir
+const showSpinner = (text = 'Veriler yükleniyor...') => {
+    elements.loadingText.textContent = text;
     elements.loadingSpinner.classList.remove('hidden');
 };
 
+// Yükleme animasyonunu gizler
 const hideSpinner = () => {
     elements.loadingSpinner.classList.add('hidden');
 };
 
-const showLoadingWithText = (text) => {
-    elements.loadingSpinner.classList.remove('hidden');
-    document.querySelector('.loading-text').textContent = text;
-};
-
+// Linkin ana host adını alır (örneğin: 'drive.google.com' -> 'Google')
 const getLinkHost = (url) => {
     try {
         const hostname = new URL(url).hostname;
         const parts = hostname.split('.');
         if (parts.length > 1) {
-            return parts[parts.length - 2].charAt(0).toUpperCase() + parts[parts.length - 2].slice(1);
+            const hostPart = parts[parts.length - 2];
+            return hostPart.charAt(0).toUpperCase() + hostPart.slice(1);
         }
         return hostname;
     } catch (e) {
@@ -133,7 +135,7 @@ const getLinkHost = (url) => {
 };
 
 const renderAnimes = async (loadMore = false) => {
-    showSpinner();
+    showSpinner('Animeler yükleniyor...');
     if (!loadMore) {
         elements.animesList.innerHTML = '';
         lastVisibleAnime = null;
@@ -172,13 +174,14 @@ const renderAnimes = async (loadMore = false) => {
         }
     } catch (error) {
         console.error("Animeler yüklenirken hata oluştu: ", error);
+        showModal('Animeler yüklenirken bir sorun oluştu.');
     } finally {
         hideSpinner();
     }
 };
 
 const renderEpisodes = async () => {
-    showSpinner();
+    showSpinner('Bölümler yükleniyor...');
     elements.episodesList.innerHTML = '';
     try {
         const snapshot = await db.collection('episodes').orderBy('createdAt', 'desc').get();
@@ -193,20 +196,21 @@ const renderEpisodes = async () => {
         }
     } catch (error) {
         console.error("Bölümler yüklenirken hata oluştu: ", error);
+        showModal('Bölümler yüklenirken bir sorun oluştu.');
     } finally {
         hideSpinner();
     }
 };
 
 const showAnimeDetail = async (animeId, animeData) => {
-    showSpinner();
+    showSpinner('Anime detayları yükleniyor...');
     elements.animeDetailCard.innerHTML = `
         <img src="${animeData.imageUrl}" alt="${animeData.name}" class="detail-image">
         <div class="detail-content">
             <h2 class="detail-title">${animeData.name}</h2>
             <p class="detail-description">${animeData.description}</p>
             ${animeData.imdbUrl ? `<p class="info-item"><b>IMDb:</b> <a href="${animeData.imdbUrl}" target="_blank">${animeData.imdbUrl}</a></p>` : ''}
-            ${animeData.genres ? `<p class="info-item"><b>Türler:</b> ${animeData.genres.join(', ')}</p>` : ''}
+            ${animeData.genres && animeData.genres.length > 0 ? `<p class="info-item"><b>Türler:</b> ${animeData.genres.join(', ')}</p>` : ''}
             <button class="edit-button" data-id="${animeId}" data-type="anime">
                 <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
             </button>
@@ -244,6 +248,7 @@ const showAnimeDetail = async (animeId, animeData) => {
         });
     } catch (error) {
         console.error("Anime bölümleri yüklenirken hata oluştu: ", error);
+        showModal('Bölümler yüklenirken bir sorun oluştu.');
     } finally {
         hideSpinner();
     }
@@ -266,12 +271,14 @@ const createEpisodeCard = (episodeId, episodeData, animeData = null) => {
         <ul class="links-list">
             ${episodeData.links.map(link => `<li><a href="${link}" target="_blank">${getLinkHost(link)}</a></li>`).join('')}
         </ul>
-        <button class="edit-button" data-id="${episodeId}" data-type="episode">
-            <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
-        </button>
-        <button class="delete-button" data-id="${episodeId}" data-type="episode">
-            <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
-        </button>
+        <div class="episode-actions">
+            <button class="edit-button" data-id="${episodeId}" data-type="episode">
+                <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
+            </button>
+            <button class="delete-button" data-id="${episodeId}" data-type="episode">
+                <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
+            </button>
+        </div>
     `;
 
     card.querySelector('.edit-button').addEventListener('click', (e) => {
@@ -292,7 +299,7 @@ const createEpisodeCard = (episodeId, episodeData, animeData = null) => {
 };
 
 const deleteData = async (collection, id, animeId = null) => {
-    showSpinner();
+    showSpinner('Siliniyor...');
     try {
         await db.collection(collection).doc(id).delete();
         showModal('Başarıyla silindi!');
@@ -319,7 +326,7 @@ const deleteData = async (collection, id, animeId = null) => {
 };
 
 const deleteAnimeAndEpisodes = async (animeId) => {
-    showSpinner();
+    showSpinner('Anime ve bölümleri siliniyor...');
     try {
         const batch = db.batch();
         const episodesSnapshot = await db.collection('episodes').where('animeId', '==', animeId).get();
@@ -368,7 +375,7 @@ const editData = (collection, id, data) => {
 
 elements.createAnimeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    showSpinner();
+    showSpinner('Anime kaydediliyor...');
     const name = animeForm.name.value.trim();
     const description = animeForm.description.value;
     const imdbUrl = animeForm.imdb.value;
@@ -413,7 +420,7 @@ elements.createAnimeForm.addEventListener('submit', async (e) => {
 
 elements.createEpisodeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    showSpinner();
+    showSpinner('Bölüm kaydediliyor...');
     const animeId = episodeForm.animeId.value;
     const season = parseInt(episodeForm.season.value) || 1;
     const number = parseInt(episodeForm.number.value);
@@ -515,13 +522,16 @@ const sendDiscordNotification = async (animeData, episodeData) => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Discord Webhook hatası: ${response.status} - ${response.statusText}`, errorText);
+            showModal(`Bildirim gönderilirken bir sorun oluştu: ${response.statusText}`);
         }
     } catch (error) {
         console.error("Discord'a bildirim gönderilirken bir hata oluştu: ", error);
+        showModal("Bildirim gönderilirken bir hata oluştu. Ağ bağlantınızı kontrol edin.");
     }
 };
 
 const populateAnimeSelect = async (selectedId = null) => {
+    showSpinner('Anime listesi yükleniyor...');
     elements.animeSelect.innerHTML = '<option value="">-- Anime Seçin --</option>';
     try {
         const snapshot = await db.collection('animes').orderBy('name').get();
@@ -536,41 +546,49 @@ const populateAnimeSelect = async (selectedId = null) => {
         });
     } catch (error) {
         console.error("Anime seçme listesi yüklenirken hata oluştu: ", error);
+        showModal('Anime listesi yüklenirken bir sorun oluştu.');
+    } finally {
+        hideSpinner();
     }
 };
 
 const renderRequests = async () => {
-    showSpinner();
+    showSpinner('Kayıt istekleri yükleniyor...');
     elements.requestsList.innerHTML = '';
     try {
         const snapshot = await db.collection('registrationRequests').where('status', '==', 'pending').get();
-        snapshot.forEach(doc => {
-            const request = doc.data();
-            const card = document.createElement('div');
-            card.classList.add('request-card');
-            card.innerHTML = `
-                <div class="request-info">
-                    <h4>${request.discordName}</h4>
-                    <p>${request.email}</p>
-                </div>
-                <div class="request-buttons">
-                    <button class="accept-btn" data-id="${doc.id}" data-uid="${request.uid}">Onayla</button>
-                    <button class="reject-btn" data-id="${doc.id}">Reddet</button>
-                </div>
-            `;
-            card.querySelector('.accept-btn').addEventListener('click', () => acceptRequest(doc.id, request.uid, request.email, request.discordName));
-            card.querySelector('.reject-btn').addEventListener('click', () => rejectRequest(doc.id, request.email));
-            elements.requestsList.appendChild(card);
-        });
+        if (snapshot.empty) {
+            elements.requestsList.innerHTML = '<p class="text-center text-gray-500">Bekleyen kayıt isteği bulunmamaktadır.</p>';
+        } else {
+            snapshot.forEach(doc => {
+                const request = doc.data();
+                const card = document.createElement('div');
+                card.classList.add('request-card');
+                card.innerHTML = `
+                    <div class="request-info">
+                        <h4>${request.discordName}</h4>
+                        <p>${request.email}</p>
+                    </div>
+                    <div class="request-buttons">
+                        <button class="accept-btn" data-id="${doc.id}" data-uid="${request.uid}">Onayla</button>
+                        <button class="reject-btn" data-id="${doc.id}">Reddet</button>
+                    </div>
+                `;
+                card.querySelector('.accept-btn').addEventListener('click', () => acceptRequest(doc.id, request.uid, request.email, request.discordName));
+                card.querySelector('.reject-btn').addEventListener('click', () => rejectRequest(doc.id, request.email));
+                elements.requestsList.appendChild(card);
+            });
+        }
     } catch (error) {
         console.error("Kayıt istekleri yüklenirken hata oluştu: ", error);
+        showModal('Kayıt istekleri yüklenirken bir sorun oluştu.');
     } finally {
         hideSpinner();
     }
 };
 
 const acceptRequest = async (requestId, uid, email, discordName) => {
-    showSpinner();
+    showSpinner('İstek onaylanıyor...');
     try {
         await db.collection('users').doc(uid).set({
             email: email,
@@ -591,10 +609,10 @@ const acceptRequest = async (requestId, uid, email, discordName) => {
 };
 
 const rejectRequest = async (requestId, email) => {
-    showSpinner();
+    showSpinner('İstek reddediliyor...');
     try {
         await db.collection('registrationRequests').doc(requestId).delete();
-        showModal(`Kayıt isteği başarıyla reddedildi. ${email} kullanıcısı tekrar deneyemez.`);
+        showModal(`Kayıt isteği başarıyla reddedildi. ${email} kullanıcısı artık kayıt olamaz.`);
         renderRequests();
     } catch (error) {
         console.error("Kayıt isteği reddedilirken hata oluştu: ", error);
@@ -604,6 +622,7 @@ const rejectRequest = async (requestId, email) => {
     }
 };
 
+// Olay dinleyicileri
 elements.modalOkButton.addEventListener('click', hideModal);
 elements.showRegisterBtn.addEventListener('click', (e) => {
     e.preventDefault();
@@ -619,7 +638,7 @@ elements.loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
-    showSpinner();
+    showSpinner('Giriş yapılıyor...');
     try {
         await auth.signInWithEmailAndPassword(email, password);
     } catch (error) {
@@ -639,7 +658,7 @@ elements.registerForm.addEventListener('submit', async (e) => {
         showModal('Şifreler eşleşmiyor.');
         return;
     }
-    showSpinner();
+    showSpinner('Kayıt isteği gönderiliyor...');
     try {
         const existingRequest = await db.collection('registrationRequests').where('email', '==', email).get();
         if (!existingRequest.empty) {
@@ -671,7 +690,7 @@ elements.registerForm.addEventListener('submit', async (e) => {
     }
 });
 elements.logoutButton.addEventListener('click', async () => {
-    showSpinner();
+    showSpinner('Çıkış yapılıyor...');
     try {
         await auth.signOut();
     } catch (error) {
@@ -717,22 +736,28 @@ elements.loadMoreAnimesButton.addEventListener('click', () => {
 // onAuthStateChanged fonksiyonunun anonim fonksiyonu "async" olarak tanımlandı
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        showLoadingWithText('Yetki kontrolü yapılıyor...');
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-            currentUser = { ...userDoc.data(), uid: user.uid };
-            elements.authView.classList.add('hidden');
-            elements.mainApp.classList.remove('hidden');
-            if (currentUser.role === 'admin') {
-                elements.requestsNavItem.classList.remove('hidden');
+        showSpinner('Yetki kontrolü yapılıyor...');
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists) {
+                currentUser = { ...userDoc.data(), uid: user.uid };
+                elements.authView.classList.add('hidden');
+                elements.mainApp.classList.remove('hidden');
+                if (currentUser.role === 'admin') {
+                    elements.requestsNavItem.classList.remove('hidden');
+                } else {
+                    elements.requestsNavItem.classList.add('hidden');
+                }
+                renderAnimes();
+                showView('animes-view');
             } else {
-                elements.requestsNavItem.classList.add('hidden');
+                await auth.signOut();
+                showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
             }
-            renderAnimes();
-            showView('animes-view');
-        } else {
+        } catch (error) {
+            console.error("Kullanıcı yetkisi kontrol edilirken hata oluştu:", error);
+            showModal('Giriş işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
             await auth.signOut();
-            showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
         }
     } else {
         currentUser = null;
