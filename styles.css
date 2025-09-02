@@ -1,3 +1,9 @@
+/*
+ * GENERAL STYLES & VARIABLE DEFINITIONS
+ * ------------------------------------
+ * Defining a color palette and setting global styles for a consistent dark theme.
+ */
+
 :root { 
     --primary-color: #5a2e98; 
     --secondary-color: #7b43a9; 
@@ -9,7 +15,19 @@
     --button-bg: #5a2e98; 
     --button-hover: #4a277e; 
     --input-bg: #2a2a2a; 
+    --placeholder-color: #777;
+    --scrollbar-track: #2a2a2a;
+    --scrollbar-thumb: #555;
+    --scrollbar-hover: #777;
 } 
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
 
 body { 
     font-family: 'Poppins', sans-serif; 
@@ -19,12 +37,37 @@ body {
     padding: 0; 
     display: flex; 
     min-height: 100vh; 
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
 } 
+
+/* Scrollbar styles for a custom, sleek look */
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 6px;
+    border: 3px solid var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-hover);
+}
 
 .container { 
     display: flex; 
-    width: 100%; 
+    width: 100%;
 } 
+
+/*
+ * SIDEBAR NAVIGATION
+ * -----------------
+ * Styling for the fixed sidebar menu.
+ */
 
 .sidebar { 
     width: 250px; 
@@ -36,13 +79,21 @@ body {
     position: fixed; 
     height: 100%; 
     box-sizing: border-box; 
+    top: 0;
+    left: 0;
+    transition: transform 0.3s ease-in-out;
 } 
+
+.sidebar.hidden {
+    transform: translateX(-100%);
+}
 
 .logo { 
     color: var(--text-color); 
     text-align: center; 
     margin-bottom: 30px; 
-    font-size: 1.5rem; 
+    font-size: 1.8rem;
+    font-weight: 700;
 } 
 
 .nav { 
@@ -58,7 +109,7 @@ body {
     color: var(--light-text-color); 
     text-decoration: none; 
     border-radius: 8px; 
-    transition: background-color 0.2s, color 0.2s; 
+    transition: background-color 0.2s, color 0.2s, transform 0.1s; 
 } 
 
 .nav-item:hover, 
@@ -66,6 +117,10 @@ body {
     background-color: var(--secondary-color); 
     color: #fff; 
 } 
+
+.nav-item:hover {
+    transform: translateX(5px);
+}
 
 .nav-icon { 
     width: 24px; 
@@ -84,27 +139,46 @@ body {
     margin-left: 250px; 
     padding: 20px; 
     overflow-y: auto; 
+    transition: margin-left 0.3s ease-in-out;
 } 
+
+.content.full-width {
+    margin-left: 0;
+}
+
+/*
+ * MAIN CONTENT SECTIONS
+ * ---------------------
+ * Styling for different views like grids and details.
+ */
 
 .view { 
     display: none; 
+    animation: fadeIn 0.5s ease-in-out;
 } 
 
 .view.active { 
     display: block; 
 } 
 
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 h2 { 
     color: var(--text-color); 
     border-bottom: 2px solid var(--primary-color); 
     padding-bottom: 10px; 
     margin-bottom: 20px; 
+    font-size: 1.8rem;
+    font-weight: 600;
 } 
 
 .grid-container { 
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
-    gap: 20px; 
+    gap: 25px; 
 } 
 
 .card, .episode-card { 
@@ -120,15 +194,20 @@ h2 {
 } 
 
 .card:hover { 
-    transform: translateY(-5px); 
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); 
+    transform: translateY(-8px); 
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5); 
 } 
 
 .card-image { 
     width: 100%; 
     height: 180px; 
     object-fit: cover; 
+    transition: transform 0.3s ease-in-out;
 } 
+
+.card:hover .card-image {
+    transform: scale(1.05);
+}
 
 .card-content { 
     padding: 15px; 
@@ -136,9 +215,10 @@ h2 {
 } 
 
 .card-title { 
-    font-size: 1.2rem; 
+    font-size: 1.3rem; 
     margin: 0 0 5px; 
-    color: var(--text-color); 
+    color: var(--text-color);
+    font-weight: 600;
 } 
 
 .card-description { 
@@ -156,15 +236,16 @@ h2 {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); 
     display: flex; 
     gap: 20px; 
-    padding: 20px; 
+    padding: 30px; 
     margin-bottom: 30px; 
 } 
 
 .detail-image { 
     width: 300px; 
-    height: 400px; 
+    height: 450px; 
     object-fit: cover; 
-    border-radius: 8px; 
+    border-radius: 10px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 } 
 
 .detail-content { 
@@ -173,16 +254,23 @@ h2 {
 } 
 
 .detail-title { 
-    font-size: 2.5rem; 
+    font-size: 2.8rem; 
     margin: 0 0 10px; 
-    color: var(--text-color); 
+    color: var(--text-color);
+    font-weight: 700;
 } 
 
 .detail-description { 
     font-size: 1rem; 
     color: var(--light-text-color); 
-    line-height: 1.6; 
+    line-height: 1.8; 
 } 
+
+/*
+ * FORM STYLING
+ * ------------
+ * Unified styles for forms, inputs, and buttons.
+ */
 
 .form-card { 
     background-color: var(--card-background); 
@@ -199,14 +287,21 @@ input, textarea, select {
     border: 1px solid var(--border-color); 
     background-color: var(--input-bg); 
     color: var(--text-color); 
-    border-radius: 5px; 
+    border-radius: 8px; 
     font-size: 1rem; 
     width: 100%; 
     box-sizing: border-box; 
+    transition: border-color 0.2s, box-shadow 0.2s;
 } 
 
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(90, 46, 152, 0.3);
+}
+
 input::placeholder, textarea::placeholder { 
-    color: var(--light-text-color); 
+    color: var(--placeholder-color); 
 } 
 
 button[type="submit"] { 
@@ -214,16 +309,46 @@ button[type="submit"] {
     background-color: var(--button-bg); 
     color: #fff; 
     border: none; 
-    border-radius: 5px; 
+    border-radius: 8px; 
     font-size: 1rem; 
     font-weight: 600; 
     cursor: pointer; 
-    transition: background-color 0.2s; 
+    transition: background-color 0.2s, transform 0.1s; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 } 
 
 button[type="submit"]:hover { 
-    background-color: var(--button-hover); 
+    background-color: var(--button-hover);
+    transform: translateY(-2px);
+}
+
+button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+.back-button { 
+    background-color: transparent; 
+    border: 2px solid var(--primary-color); 
+    color: var(--primary-color); 
+    padding: 10px 15px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    margin-bottom: 20px; 
+    font-weight: 600;
 } 
+
+.back-button:hover { 
+    background-color: var(--primary-color); 
+    color: var(--text-color); 
+} 
+
+/*
+ * EPISODE & REQUEST STYLING
+ * ------------------------
+ * Styling for episode cards and user registration requests.
+ */
 
 .episode-card { 
     background-color: var(--card-background); 
@@ -233,18 +358,24 @@ button[type="submit"]:hover {
     flex-direction: column; 
     gap: 8px; 
     position: relative; 
+    transition: background-color 0.2s;
 } 
+
+.episode-card:hover {
+    background-color: #252525;
+}
 
 .episode-card h4 { 
     margin: 0; 
     font-size: 1.1rem; 
-    color: var(--text-color); 
+    color: var(--text-color);
+    font-weight: 600;
 } 
 
 .episode-meta span { 
     font-size: 0.85rem; 
     color: var(--light-text-color); 
-    margin-right: 10px; 
+    margin-right: 15px;
 } 
 
 .links-list { 
@@ -259,8 +390,13 @@ button[type="submit"]:hover {
 .links-list li a { 
     color: var(--primary-color); 
     text-decoration: none; 
-    font-weight: 600; 
+    font-weight: 600;
+    transition: color 0.2s;
 } 
+
+.links-list li a:hover {
+    color: var(--secondary-color);
+}
 
 .edit-button, .delete-button { 
     position: absolute; 
@@ -270,103 +406,26 @@ button[type="submit"]:hover {
     border: none; 
     cursor: pointer; 
     padding: 5px; 
-    z-index: 10; 
+    z-index: 10;
+    transition: transform 0.2s;
 } 
 
 .delete-button { 
     right: 45px; 
 } 
 
+.edit-button:hover, .delete-button:hover {
+    transform: scale(1.1);
+}
+
 .edit-button img, .delete-button img { 
     width: 20px; 
+    height: 20px;
     filter: invert(0.8); 
     transition: filter 0.2s; 
 } 
 
 .edit-button:hover img, .delete-button:hover img { 
-    filter: invert(1); 
-} 
-
-.back-button { 
-    background-color: transparent; 
-    border: 1px solid var(--primary-color); 
-    color: var(--primary-color); 
-    padding: 10px 15px; 
-    border-radius: 5px; 
-    cursor: pointer; 
-    transition: all 0.2s; 
-    margin-bottom: 20px; 
-    font-weight: 600; 
-} 
-
-.back-button:hover { 
-    background-color: var(--primary-color); 
-    color: var(--text-color); 
-} 
-
-.spinner-container { 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background-color: rgba(0, 0, 0, 0.6); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    z-index: 999;
-    flex-direction: column;
-} 
-
-.spinner { 
-    border: 8px solid rgba(255, 255, 255, 0.1); 
-    border-top: 8px solid var(--primary-color); 
-    border-radius: 50%; 
-    width: 60px; 
-    height: 60px; 
-    animation: spin 1s linear infinite; 
-} 
-
-.loading-text {
-    margin-top: 20px;
-    font-size: 1.1rem;
-    color: var(--light-text-color);
-}
-
-@keyframes spin { 
-    0% { transform: rotate(0deg); } 
-    100% { transform: rotate(360deg); } 
-} 
-
-.hidden { 
-    display: none !important; 
-} 
-
-.episode-card .edit-button, 
-.episode-card .delete-button { 
-    position: absolute; 
-    top: 10px; 
-    background: none; 
-    border: none; 
-    cursor: pointer; 
-    padding: 5px; 
-    right: 45px; 
-} 
-
-.episode-card .delete-button { 
-    right: 10px; 
-} 
-
-.episode-card .edit-button img, 
-.episode-card .delete-button img { 
-    width: 20px; 
-    height: 20px; 
-    filter: invert(0.8); 
-    transition: filter 0.2s; 
-} 
-
-.episode-card .edit-button:hover img, 
-.episode-card .delete-button:hover img { 
     filter: invert(1); 
 } 
 
@@ -384,14 +443,20 @@ button[type="submit"]:hover {
     font-size: 1rem; 
     font-weight: 600; 
     cursor: pointer; 
-    transition: background-color 0.2s; 
+    transition: background-color 0.2s, transform 0.1s; 
 } 
 
 .load-more-button:hover { 
-    background-color: var(--button-hover); 
+    background-color: var(--button-hover);
+    transform: translateY(-2px);
 } 
 
-/* Yeni Auth Form Stilleri */
+/*
+ * AUTHENTICATION FORM STYLES
+ * --------------------------
+ * Styling for login and registration pages.
+ */
+
 .auth-container {
     display: flex;
     justify-content: center;
@@ -414,7 +479,8 @@ button[type="submit"]:hover {
 
 .form-title {
     font-size: 2rem;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    font-weight: 700;
 }
 
 .auth-form {
@@ -426,26 +492,44 @@ button[type="submit"]:hover {
 .auth-toggle {
     margin-top: 20px;
     color: var(--light-text-color);
+    font-size: 0.95rem;
 }
 
 .auth-toggle a {
     color: var(--primary-color);
     text-decoration: none;
     font-weight: 600;
+    transition: color 0.2s;
 }
 
-/* Modal Stilleri */
+.auth-toggle a:hover {
+    color: var(--secondary-color);
+}
+
+/*
+ * MODAL STYLES
+ * ------------
+ * Overlay and content styling for pop-up modals.
+ */
+
 .custom-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(5px);
+    animation: fadeInModal 0.3s ease-in-out;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .modal-content {
@@ -453,12 +537,26 @@ button[type="submit"]:hover {
     padding: 30px;
     border-radius: 10px;
     text-align: center;
-    max-width: 400px;
+    max-width: 450px;
     width: 90%;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    animation: slideInModal 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+@keyframes slideInModal {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-content h3 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
 }
 
 .modal-content p {
     margin-bottom: 20px;
+    color: var(--light-text-color);
 }
 
 .modal-content button {
@@ -470,11 +568,16 @@ button[type="submit"]:hover {
     cursor: pointer;
 }
 
-/* Kayıt İstekleri Stilleri */
+/*
+ * ADMIN PANEL - REQUESTS
+ * ----------------------
+ * Styling for the user registration request list.
+ */
+
 #requests-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px;
 }
 
 .request-card {
@@ -484,6 +587,12 @@ button[type="submit"]:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s;
+}
+
+.request-card:hover {
+    background-color: #252525;
 }
 
 .request-info {
@@ -492,6 +601,15 @@ button[type="submit"]:hover {
 
 .request-info h4 {
     margin: 0 0 5px;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.request-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--light-text-color);
 }
 
 .request-buttons button {
@@ -501,6 +619,7 @@ button[type="submit"]:hover {
     cursor: pointer;
     font-weight: 600;
     margin-left: 10px;
+    transition: background-color 0.2s, transform 0.1s;
 }
 
 .request-buttons .accept-btn {
@@ -508,26 +627,43 @@ button[type="submit"]:hover {
     color: #fff;
 }
 
+.request-buttons .accept-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
 .request-buttons .reject-btn {
     background-color: #f44336;
     color: #fff;
 }
 
+.request-buttons .reject-btn:hover {
+    background-color: #d32f2f;
+    transform: translateY(-2px);
+}
 
-/* Yükleme Ekranı ve Spinner */
+
+/*
+ * LOADING SCREEN & SPINNER
+ * ------------------------
+ * Enhanced, professional-looking loading animation.
+ */
+
 .loading-container {
-    position: fixed; /* Ekranın her zaman en üstünde kalmasını sağlar */
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--background-color-darker); /* Koyu arka plan rengi */
+    background-color: rgba(0, 0, 0, 0.8);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Diğer tüm elemanların üzerinde olmasını sağlar */
-    transition: opacity 0.3s ease-in-out;
+    z-index: 1000;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s;
 }
 
 .loading-container.hidden {
@@ -535,55 +671,113 @@ button[type="submit"]:hover {
     visibility: hidden;
 }
 
-/* Spinner'ın kendisi */
 .loading-spinner {
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid var(--primary-color);
+    width: 70px;
+    height: 70px;
+    border: 5px solid rgba(255, 255, 255, 0.2);
+    border-top: 5px solid var(--primary-color);
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
+    position: relative;
+    animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
 
-/* Yükleme Metni */
+.loading-spinner::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 5px solid transparent;
+    border-top-color: var(--secondary-color);
+    border-radius: 50%;
+    animation: spin-reverse 1s linear infinite;
+}
+
 .loading-text {
-    margin-top: 20px;
-    color: #fff;
+    margin-top: 25px;
+    color: var(--text-color);
     font-size: 1.2rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    animation: pulse 1.5s infinite;
 }
 
-/* Dönme animasyonu */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
+@keyframes spin-reverse {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(-360deg); }
+}
 
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
 
+/*
+ * RESPONSIVE DESIGN
+ * -----------------
+ * Adapting the layout for smaller screens.
+ */
 
-
-/* Responsive Düzenlemeler */
 @media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+    
     .sidebar {
         width: 100%;
         height: auto;
         position: static;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 10px;
+        transition: none;
     }
+    .sidebar.hidden {
+        transform: translateX(0);
+    }
+    .nav {
+        flex-direction: row;
+        gap: 5px;
+    }
+    .nav-item {
+        padding: 8px 10px;
+    }
+    .nav-icon {
+        margin-right: 0;
+    }
+    .nav-item span {
+        display: none;
+    }
+    .logo {
+        display: none;
+    }
+
     .content {
         margin-left: 0;
+        padding-top: 80px;
     }
-    .container {
-        flex-direction: column;
-    }
+
     .detail-card {
         flex-direction: column;
         align-items: center;
+        padding: 20px;
     }
     .detail-image {
         width: 100%;
         height: auto;
         max-width: 300px;
+    }
+    .detail-title {
+        font-size: 2rem;
+        text-align: center;
     }
 }
