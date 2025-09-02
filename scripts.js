@@ -1,7 +1,7 @@
 // Güvenlik Uyarısı: API anahtarlarınızı doğrudan koda gömmeyin.
-// Bu Vercel gibi ortajmlarda ortam değişkenleri (environment variables) ile yönetilmelidir.
+// Bu Vercel gibi ortamlarda ortam değişkenleri (environment variables) ile yönetilmelidir.
 const firebaseConfig = {
-    apiKey: "AIzaSyCpcXdVJv3LUN8YVknQQBXk9jCw2BeKXo",
+    apiKey: "AIzaSyCpcXdVwJv3LUN8YVknQQBXk9jCw2BeKXo",
     authDomain: "somesubspanel.firebaseapp.com",
     projectId: "somesubspanel",
     storageBucket: "somesubspanel.firebasestorage.app",
