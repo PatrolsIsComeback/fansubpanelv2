@@ -542,12 +542,16 @@ const sendDiscordNotification = async (animeData, episodeData) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
+
+        // Yanıtın başarılı olup olmadığını kontrol et
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Discord Webhook hatası: ${response.status} - ${response.statusText}`, errorText);
+            throw new Error(`Discord'a bildirim gönderilemedi. Hata kodu: ${response.status}`);
         }
     } catch (error) {
         console.error("Discord'a bildirim gönderilirken bir hata oluştu: ", error);
+        showModal(`Bildirim gönderimi başarısız oldu: ${error.message}`);
     }
 };
 
@@ -633,3 +637,190 @@ const rejectRequest = async (requestId, email) => {
         renderRequests();
     } catch (error) {
         console.error("Kayıt isteği reddedilirken hata oluştu: ", error);
+        showModal("Kayıt isteği reddedilirken bir hata oluştu.");
+    } finally {
+        hideSpinner();
+    }
+};
+
+// --- Olay Dinleyicileri
+elements.modalOkButton.addEventListener('click', hideModal);
+
+elements.showRegisterBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    elements.loginFormCard.classList.add('hidden');
+    elements.registerFormCard.classList.remove('hidden');
+});
+
+elements.showLoginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    elements.registerFormCard.classList.add('hidden');
+    elements.loginFormCard.classList.remove('hidden');
+});
+
+elements.loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    showSpinner();
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch (error) {
+        console.error("Giriş işlemi başarısız: ", error);
+        showModal('Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.');
+    } finally {
+        hideSpinner();
+    }
+});
+
+elements.registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const repeatPassword = document.getElementById('register-password-repeat').value;
+    const discordName = document.getElementById('register-discord-name').value;
+    if (password !== repeatPassword) {
+        showModal('Şifreler eşleşmiyor.');
+        return;
+    }
+    showSpinner();
+    try {
+        const existingRequest = await db.collection('registrationRequests').where('email', '==', email).get();
+        if (!existingRequest.empty) {
+            showModal('Bu e-posta adresi için zaten bir kayıt isteği bulunmaktadır.');
+            hideSpinner();
+            return;
+        }
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        await db.collection('registrationRequests').doc(user.uid).set({
+            uid: user.uid,
+            email: email,
+            discordName: discordName,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await auth.signOut();
+        showModal('Kayıt isteğiniz başarıyla gönderildi. Yönetici onayı bekleniyor.');
+    } catch (error) {
+        console.error("Kayıt işlemi başarısız: ", error);
+        if (error.code === 'auth/email-already-in-use') {
+            showModal('Bu e-posta adresi zaten kullanılıyor. Lütfen farklı bir e-posta kullanın.');
+        } else {
+            showModal(`Kayıt sırasında bir hata oluştu: ${error.message}`);
+        }
+    } finally {
+        hideSpinner();
+        elements.registerForm.reset();
+    }
+});
+
+elements.logoutButton.addEventListener('click', async () => {
+    showSpinner();
+    try {
+        await auth.signOut();
+    } catch (error) {
+        console.error("Çıkış işlemi başarısız: ", error);
+        showModal('Çıkış işlemi sırasında bir hata oluştu.');
+    } finally {
+        hideSpinner();
+    }
+});
+
+elements.navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const viewId = item.dataset.view;
+        showView(viewId);
+        if (viewId === 'animes-view') {
+            renderAnimes();
+        } else if (viewId === 'episodes-view') {
+            renderEpisodes();
+        } else if (viewId === 'create-episode-view') {
+            populateAnimeSelect();
+            isEditing = false;
+            currentEditId = null;
+            elements.createEpisodeForm.reset();
+            episodeForm.submitBtn.textContent = 'Bölümü Kaydet ve Bildirim Gönder';
+        } else if (viewId === 'create-anime-view') {
+            isEditing = false;
+            currentEditId = null;
+            elements.createAnimeForm.reset();
+            animeForm.submitBtn.textContent = 'Animeyi Kaydet';
+        } else if (viewId === 'requests-view') {
+            renderRequests();
+        }
+    });
+});
+
+elements.backToAnimesButton.addEventListener('click', () => {
+    showView('animes-view');
+    renderAnimes();
+});
+
+elements.loadMoreAnimesButton.addEventListener('click', () => {
+    renderAnimes(true);
+});
+
+elements.animeSearchInput.addEventListener('input', async (e) => {
+    const query = e.target.value.trim().toLowerCase();
+    if (query.length > 0) {
+        showSpinner();
+        elements.animesList.innerHTML = '';
+        elements.loadMoreAnimesButton.classList.add('hidden');
+        try {
+            const snapshot = await db.collection('animes')
+                                     .orderBy('name')
+                                     .startAt(query)
+                                     .endAt(query + '\uf8ff')
+                                     .get();
+            snapshot.forEach(doc => {
+                const anime = doc.data();
+                const card = renderCard(doc.id, anime, 'anime');
+                elements.animesList.appendChild(card);
+            });
+        } catch (error) {
+            console.error("Arama yapılırken hata oluştu: ", error);
+            showModal("Arama yapılırken bir hata oluştu.");
+        } finally {
+            hideSpinner();
+        }
+    } else {
+        renderAnimes(); // Arama kutusu boşsa tüm listeyi yeniden yükle
+    }
+});
+
+// --- Yetkilendirme Kontrolü
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        showLoadingWithText('Yetki kontrolü yapılıyor...');
+        try {
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            if (userDoc.exists) {
+                currentUser = { ...userDoc.data(), uid: user.uid };
+                elements.authView.classList.add('hidden');
+                elements.mainApp.classList.remove('hidden');
+                if (currentUser.role === 'admin') {
+                    elements.requestsNavItem.classList.remove('hidden');
+                } else {
+                    elements.requestsNavItem.classList.add('hidden');
+                }
+                renderAnimes();
+                showView('animes-view');
+            } else {
+                await auth.signOut();
+                showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
+            }
+        } catch (error) {
+            console.error("Kullanıcı verisi çekilirken hata oluştu: ", error);
+            showModal('Kullanıcı verisi çekilirken bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+    } else {
+        currentUser = null;
+        elements.mainApp.classList.add('hidden');
+        elements.authView.classList.remove('hidden');
+        elements.loginFormCard.classList.remove('hidden');
+        elements.registerFormCard.classList.add('hidden');
+    }
+    hideSpinner();
+});
