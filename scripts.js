@@ -18,7 +18,6 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = app.auth();
 const db = app.firestore();
 
-// --- DOM Elementleri ve Sabitler
 const elements = {
     authView: document.getElementById('auth-view'),
     mainApp: document.getElementById('main-app'),
@@ -50,8 +49,6 @@ const elements = {
     customModal: document.getElementById('custom-modal'),
     modalMessage: document.getElementById('modal-message'),
     modalOkButton: document.getElementById('modal-ok-button'),
-    // Arama
-    animeSearchInput: document.getElementById('anime-search-input')
 };
 
 const animeForm = {
@@ -81,7 +78,7 @@ let currentEditId = null;
 let lastVisibleAnime = null;
 let currentUser = null;
 
-// --- Yardımcı Fonksiyonlar
+// Custom modal gösteren fonksiyon
 const showModal = (message) => {
     elements.modalMessage.textContent = message;
     elements.customModal.classList.remove('hidden');
@@ -135,21 +132,6 @@ const getLinkHost = (url) => {
     }
 };
 
-const renderCard = (id, data, collectionType) => {
-    const card = document.createElement('div');
-    card.classList.add('card');
-    card.innerHTML = `
-        <img src="${data.imageUrl}" alt="${data.name}" class="card-image">
-        <div class="card-content">
-            <h3 class="card-title">${data.name}</h3>
-            <p class="card-description">${data.description}</p>
-        </div>
-    `;
-    card.addEventListener('click', () => showAnimeDetail(id, data));
-    return card;
-};
-
-// --- Veri Çekme ve Render Fonksiyonları
 const renderAnimes = async (loadMore = false) => {
     showSpinner();
     if (!loadMore) {
@@ -169,7 +151,16 @@ const renderAnimes = async (loadMore = false) => {
         
         snapshot.forEach(doc => {
             const anime = doc.data();
-            const card = renderCard(doc.id, anime, 'anime');
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.innerHTML = `
+                <img src="${anime.imageUrl}" alt="${anime.name}" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">${anime.name}</h3>
+                    <p class="card-description">${anime.description}</p>
+                </div>
+            `;
+            card.addEventListener('click', () => showAnimeDetail(doc.id, anime));
             elements.animesList.appendChild(card);
         });
 
@@ -181,7 +172,6 @@ const renderAnimes = async (loadMore = false) => {
         }
     } catch (error) {
         console.error("Animeler yüklenirken hata oluştu: ", error);
-        showModal("Animeler yüklenirken bir hata oluştu.");
     } finally {
         hideSpinner();
     }
@@ -203,7 +193,6 @@ const renderEpisodes = async () => {
         }
     } catch (error) {
         console.error("Bölümler yüklenirken hata oluştu: ", error);
-        showModal("Bölümler yüklenirken bir hata oluştu.");
     } finally {
         hideSpinner();
     }
@@ -227,26 +216,19 @@ const showAnimeDetail = async (animeId, animeData) => {
         </div>
     `;
     
-    const editBtn = elements.animeDetailCard.querySelector('.edit-button');
-    const deleteBtn = elements.animeDetailCard.querySelector('.delete-button');
-
-    if (currentUser?.role !== 'admin') {
-        editBtn.style.display = 'none';
-        deleteBtn.style.display = 'none';
-    } else {
-        editBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            editData('animes', animeId, animeData);
-        });
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showModal('Bu animeyi ve tüm bölümlerini silmek istediğinize emin misiniz?');
-            elements.modalOkButton.onclick = () => {
-                hideModal();
-                deleteAnimeAndEpisodes(animeId);
-            };
-        });
-    }
+    elements.animeDetailCard.querySelector('.edit-button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        editData('animes', animeId, animeData);
+    });
+    
+    elements.animeDetailCard.querySelector('.delete-button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        showModal('Bu animeyi ve tüm bölümlerini silmek istediğinize emin misiniz?');
+        elements.modalOkButton.onclick = () => {
+            hideModal();
+            deleteAnimeAndEpisodes(animeId);
+        };
+    });
 
     elements.animeEpisodesList.innerHTML = '';
     try {
@@ -262,7 +244,6 @@ const showAnimeDetail = async (animeId, animeData) => {
         });
     } catch (error) {
         console.error("Anime bölümleri yüklenirken hata oluştu: ", error);
-        showModal("Anime bölümleri yüklenirken bir hata oluştu.");
     } finally {
         hideSpinner();
     }
@@ -293,31 +274,23 @@ const createEpisodeCard = (episodeId, episodeData, animeData = null) => {
         </button>
     `;
 
-    const editBtn = card.querySelector('.edit-button');
-    const deleteBtn = card.querySelector('.delete-button');
+    card.querySelector('.edit-button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        editData('episodes', episodeId, episodeData);
+    });
 
-    if (currentUser?.role !== 'admin') {
-        editBtn.style.display = 'none';
-        deleteBtn.style.display = 'none';
-    } else {
-        editBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            editData('episodes', episodeId, episodeData);
-        });
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showModal('Bu bölümü silmek istediğinize emin misiniz?');
-            elements.modalOkButton.onclick = () => {
-                hideModal();
-                deleteData('episodes', episodeId, episodeData.animeId);
-            };
-        });
-    }
+    card.querySelector('.delete-button').addEventListener('click', (e) => {
+        e.stopPropagation();
+        showModal('Bu bölümü silmek istediğinize emin misiniz?');
+        elements.modalOkButton.onclick = () => {
+            hideModal();
+            deleteData('episodes', episodeId, episodeData.animeId);
+        };
+    });
 
     return card;
 };
 
-// --- Silme, Düzenleme ve Ekleme Fonksiyonları
 const deleteData = async (collection, id, animeId = null) => {
     showSpinner();
     try {
@@ -539,15 +512,12 @@ const sendDiscordNotification = async (animeData, episodeData) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
-
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Discord Webhook hatası: ${response.status} - ${response.statusText}`, errorText);
-            showModal(`Discord'a bildirim gönderilemedi. Hata kodu: ${response.status}. Lütfen konsolu kontrol edin.`);
         }
     } catch (error) {
         console.error("Discord'a bildirim gönderilirken bir hata oluştu: ", error);
-        showModal(`Bildirim gönderimi başarısız oldu: ${error.message}`);
     }
 };
 
@@ -574,10 +544,6 @@ const renderRequests = async () => {
     elements.requestsList.innerHTML = '';
     try {
         const snapshot = await db.collection('registrationRequests').where('status', '==', 'pending').get();
-        if (snapshot.empty) {
-            elements.requestsList.innerHTML = '<p class="text-center">Bekleyen kayıt isteği bulunmamaktadır.</p>';
-            return;
-        }
         snapshot.forEach(doc => {
             const request = doc.data();
             const card = document.createElement('div');
@@ -598,7 +564,6 @@ const renderRequests = async () => {
         });
     } catch (error) {
         console.error("Kayıt istekleri yüklenirken hata oluştu: ", error);
-        showModal("Kayıt istekleri yüklenirken bir hata oluştu.");
     } finally {
         hideSpinner();
     }
@@ -639,7 +604,6 @@ const rejectRequest = async (requestId, email) => {
     }
 };
 
-// --- Olay Dinleyicileri
 elements.modalOkButton.addEventListener('click', hideModal);
 elements.showRegisterBtn.addEventListener('click', (e) => {
     e.preventDefault();
@@ -749,41 +713,14 @@ elements.backToAnimesButton.addEventListener('click', () => {
 elements.loadMoreAnimesButton.addEventListener('click', () => {
     renderAnimes(true);
 });
-elements.animeSearchInput.addEventListener('input', async (e) => {
-    const query = e.target.value.trim().toLowerCase();
-    if (query.length > 0) {
-        showSpinner();
-        elements.animesList.innerHTML = '';
-        elements.loadMoreAnimesButton.classList.add('hidden');
-        try {
-            const snapshot = await db.collection('animes')
-                                     .orderBy('name')
-                                     .startAt(query)
-                                     .endAt(query + '\uf8ff')
-                                     .get();
-            snapshot.forEach(doc => {
-                const anime = doc.data();
-                const card = renderCard(doc.id, anime, 'anime');
-                elements.animesList.appendChild(card);
-            });
-        } catch (error) {
-            console.error("Arama yapılırken hata oluştu: ", error);
-            showModal("Arama yapılırken bir hata oluştu.");
-        } finally {
-            hideSpinner();
-        }
-    } else {
-        renderAnimes(); // Arama kutusu boşsa tüm listeyi yeniden yükle
-    }
-});
 
-// onAuthStateChanged fonksiyonu, kullanıcının rolüne göre menü öğelerini gösterir veya gizler.
+// onAuthStateChanged fonksiyonunun anonim fonksiyonu "async" olarak tanımlandı
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         showLoadingWithText('Yetki kontrolü yapılıyor...');
         const userDoc = await db.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
-            currentUser = userDoc.data();
+            currentUser = { ...userDoc.data(), uid: user.uid };
             elements.authView.classList.add('hidden');
             elements.mainApp.classList.remove('hidden');
             if (currentUser.role === 'admin') {
@@ -794,7 +731,6 @@ auth.onAuthStateChanged(async (user) => {
             renderAnimes();
             showView('animes-view');
         } else {
-            // Kullanıcı, auth sisteminde olmasına rağmen Firestore'da yoksa
             await auth.signOut();
             showModal('Hesabınız henüz yönetici tarafından onaylanmamıştır.');
         }
