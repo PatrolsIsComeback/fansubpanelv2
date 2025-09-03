@@ -228,7 +228,7 @@ const showAnimeDetail = async (animeId, animeData) => {
             ${animeData.genres && animeData.genres.length > 0 ? `<p class="info-item"><b>Türler:</b> ${animeData.genres.join(', ')}</p>` : ''}
             <button class="edit-button" data-id="${animeId}" data-type="anime">
  // 
-            <i class="fi fi-sr-settings" alt="Düzenle">
+            <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
             </button>
             <button class="delete-button" data-id="${animeId}" data-type="anime">
                 <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
