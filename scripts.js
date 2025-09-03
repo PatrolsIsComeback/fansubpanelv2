@@ -6,7 +6,7 @@ const firebaseConfig = {
     projectId: "somesubspanel",
     storageBucket: "somesubspanel.firebasestorage.app",
     messagingSenderId: "1084301012165",
-    appId: "1:1084301012165:web:29c773daea44b35f8f54ac",f
+    appId: "1:1084301012165:web:29c773daea44b35f8f54ac",
     measurementId: "G-BBLN91Q0TV"
 };
 
@@ -227,8 +227,7 @@ const showAnimeDetail = async (animeId, animeData) => {
             ${animeData.imdbUrl ? `<p class="info-item"><b>IMDb:</b> <a href="${animeData.imdbUrl}" target="_blank">${animeData.imdbUrl}</a></p>` : ''}
             ${animeData.genres && animeData.genres.length > 0 ? `<p class="info-item"><b>Türler:</b> ${animeData.genres.join(', ')}</p>` : ''}
             <button class="edit-button" data-id="${animeId}" data-type="anime">
- // 
-            <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
+                <img src="https://www.svgrepo.com/show/440507/edit.svg" alt="Düzenle">
             </button>
             <button class="delete-button" data-id="${animeId}" data-type="anime">
                 <img src="https://www.svgrepo.com/show/440520/trash.svg" alt="Sil">
