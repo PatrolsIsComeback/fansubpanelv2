@@ -810,4 +810,15 @@ button[type="submit"]:active {
 
     /* Episode kartındaki butonların mobil görünümü */
     .episode-card .edit-button,
-    .episode-card .
+    .episode-card .delete-button {
+        position: static;
+        margin-top: 10px;
+    }
+    .episode-card .delete-button {
+        margin-left: 10px;
+    }
+    .episode-card .episode-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+}
