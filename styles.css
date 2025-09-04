@@ -42,6 +42,8 @@ body {
     display: flex; 
     min-height: 100vh;
     flex-direction: column;
+    -webkit-font-smoothing: antialiased; /* Fontları daha pürüzsüz yapar */
+    -moz-osx-font-smoothing: grayscale;
 } 
 
 /*
@@ -185,6 +187,10 @@ h2 {
     transition: transform var(--transition-speed), box-shadow var(--transition-speed);
 } 
 
+.card {
+    cursor: pointer;
+}
+
 .card:hover { 
     transform: translateY(-8px) scale(1.02); 
     box-shadow: var(--hover-shadow); 
@@ -246,6 +252,7 @@ h2 {
 
 .detail-content { 
     flex-grow: 1; 
+    position: relative; /* Butonlar için konumlandırma */
 } 
 
 .detail-title { 
@@ -428,7 +435,7 @@ button[type="submit"]:active {
  * Yükleme Ekranı ve Spinner
  * Geliştirme: Daha dinamik ve tam ekran yükleme animasyonu.
  */
-.loading-overlay { 
+.loading-container { 
     position: fixed; 
     top: 0; 
     left: 0; 
@@ -443,7 +450,7 @@ button[type="submit"]:active {
     transition: opacity var(--transition-speed), visibility var(--transition-speed);
 } 
 
-.loading-overlay.hidden {
+.loading-container.hidden {
     opacity: 0;
     visibility: hidden;
     pointer-events: none; /* Sayfayla etkileşimi engellemek için */
@@ -678,6 +685,34 @@ button[type="submit"]:active {
 }
 
 /*
+ * Yeni eklenenler
+ */
+.header-with-search {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Küçük ekranlarda sığdırmak için */
+    gap: 10px;
+}
+
+.search-input {
+    width: 250px;
+    padding: 10px 15px;
+    border-radius: 20px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    transition: all var(--transition-speed);
+}
+
+.search-input:focus {
+    width: 300px; /* Odaklanınca genişler */
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(90, 46, 152, 0.3);
+}
+
+/*
  * Görünürlük Yardımcı Sınıflar
  */
 .hidden { 
@@ -717,6 +752,14 @@ button[type="submit"]:active {
 
     .detail-description {
         text-align: justify;
+    }
+
+    .search-input {
+        width: 100%; /* Tablette tam genişlik */
+    }
+    
+    .search-input:focus {
+        width: 100%;
     }
 }
 
@@ -778,7 +821,7 @@ button[type="submit"]:active {
     .nav-icon {
         margin-right: 0;
     }
-
+    
     .content {
         margin-left: 0;
         padding: 20px;
@@ -820,5 +863,19 @@ button[type="submit"]:active {
     .episode-card .episode-actions {
         display: flex;
         justify-content: flex-end;
+    }
+    
+    .header-with-search {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header-with-search h2 {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .search-input {
+        width: 100%;
     }
 }
